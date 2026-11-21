@@ -62,6 +62,9 @@
   .vb{border:0;border-radius:9px;min-width:38px;height:32px;padding:0 9px;font:italic 600 13px 'Exo 2',sans-serif;color:#eee;background:rgba(30,30,30,.62);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .vb:disabled{opacity:.35}
+  #recBtn.rec{background:#c0182a;color:#fff;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:.6}}
+  #overlay video{max-width:100%;max-height:72vh;border-radius:4px;box-shadow:0 0 0 3px #555,0 10px 40px #000}
   .vb.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
   #rendBtn2{display:none}
   #cover{image-rendering:auto !important;pointer-events:none}
@@ -75,6 +78,7 @@
     box-shadow:inset 0 2px 4px #000,0 1px 0 rgba(255,255,255,.12)}
   .cin input::placeholder{color:#777}
   .exsz{display:flex;gap:6px}
+  .exsz[hidden]{display:none}
   .exsz button{border:0;border-radius:9px;padding:7px 12px;font:italic 600 13px 'Exo 2',sans-serif;color:#ddd;background:#2a2a2a;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
   .exsz button.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
   .exsz button small{display:block;font-size:10px;opacity:.7}
@@ -144,7 +148,7 @@
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="autoBtn" title="Render by itself when you stop editing (A)">Auto</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="recBtn" title="Record a fly-through clip (V)">● Clip</button><button class="vb" id="autoBtn" title="Render by itself when you stop editing (A)">Auto</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -159,7 +163,7 @@
     </div>
   </footer>
 </div>
-<div id="overlay" hidden><img id="shot" alt="Your rendered scene"><div class="exsz" id="exsz"><button data-k="0" class="on">Screen<small>as shown</small></button><button data-k="1">Poster<small>2K · smooth</small></button><button data-k="2">Print<small>4K · slow</small></button></div><p id="exmsg">Press and hold the picture (or right-click) to save it.</p><div class="btns" style="width:auto"><button class="mbtn" id="dlBtn" style="flex:none;padding:10px 18px">⬇ Download</button><button class="mbtn" id="shareBtn2" style="flex:none;padding:10px 22px">🔗 Share link</button><button class="mbtn" id="closeBtn" style="flex:none;padding:10px 30px">Close</button></div></div>
+<div id="overlay" hidden><img id="shot" alt="Your rendered scene"><video id="clip" controls loop playsinline muted hidden></video><div class="exsz" id="exsz"><button data-k="0" class="on">Screen<small>as shown</small></button><button data-k="1">Poster<small>2K · smooth</small></button><button data-k="2">Print<small>4K · slow</small></button></div><p id="exmsg">Press and hold the picture (or right-click) to save it.</p><div class="btns" style="width:auto"><button class="mbtn" id="dlBtn" style="flex:none;padding:10px 18px">⬇ Download</button><button class="mbtn" id="shareBtn2" style="flex:none;padding:10px 22px">🔗 Share link</button><button class="mbtn" id="closeBtn" style="flex:none;padding:10px 30px">Close</button></div></div>
 <div id="err"></div>
 
 <script id="fs" type="x-shader/x-fragment">#version 300 es
@@ -762,17 +766,39 @@ let flying=false, fScale=1/5, fLast=0; const flyBtn=$('#flyBtn');
 function fly(ts){ if(!flying) return;
   const dt=fLast?Math.min(0.1,(ts-fLast)/1000):0.016;
   if(fLast){ const ms=ts-fLast; if(ms>70) fScale=Math.max(1/12,fScale*0.88); else if(ms<34) fScale=Math.min(1/2.5,fScale*1.05); }
-  fLast=ts; cam.yaw+=dt*0.22; cam.pitch=0.14+0.09*Math.sin(ts/2600); placeSun&&placeSun();
-  fullDraw(fScale); requestAnimationFrame(fly); }
+  fLast=ts; cam.yaw+=dt*0.22*(rec?1.9:1); cam.pitch=0.14+0.09*Math.sin(ts/2600); placeSun&&placeSun();
+  fullDraw(fScale); if(rec) recFrame(); requestAnimationFrame(fly); }
+// ---------- fly-through clips: frames are copied to a fixed-size 2D canvas (with the cover text) and recorded
+let rec=null; const CLIP_S=10;
+function clipType(){ const T=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm']; if(!window.MediaRecorder) return null;
+  for(const t of T){ try{ if(MediaRecorder.isTypeSupported(t)) return t; }catch(e){} } return ''; }
+function recFrame(){ const c=rec.c2; c.imageSmoothingEnabled=true; c.drawImage(cv,0,0,rec.cv.width,rec.cv.height); drawCover(c,rec.cv.width,rec.cv.height);
+  const left=Math.max(0,Math.ceil(CLIP_S-(performance.now()-rec.t0)/1000)); if(left!==rec.left){ rec.left=left; lcd('Recording… '+left+' s'); } if(left<=0) stopRec(); }
+async function startRec(){
+  const type=clipType(); if(type===null){ lcd('This browser cannot record video.'); return; }
+  await coverFonts(); const asp=cv.width/cv.height, L=Math.min(1280,Math.max(640,Math.round(stage.clientWidth*Math.min(2,devicePixelRatio||1))));
+  const w=(asp>=1?L:Math.round(L*asp))&~1, h=(asp>=1?Math.round(L/asp):L)&~1;
+  const out=document.createElement('canvas'); out.width=w; out.height=h; const c2=out.getContext('2d'); c2.fillStyle='#000'; c2.fillRect(0,0,w,h);
+  const st=out.captureStream(30), chunks=[]; let mr;
+  try{ mr=new MediaRecorder(st,type?{mimeType:type,videoBitsPerSecond:8e6}:{videoBitsPerSecond:8e6}); }catch(e){ lcd('This browser cannot record video.'); return; }
+  rec={cv:out,c2,mr,t0:performance.now(),left:-1}; mr.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  mr.onstop=()=>{ const t=mr.mimeType||type||'video/webm', blob=new Blob(chunks,{type:t}); showClip(blob,/mp4/.test(t)?'mp4':'webm'); };
+  mr.start(250); $('#recBtn').classList.add('rec'); $('#recBtn').textContent='■ Stop';
+  if(!flying) flyBtn.onclick(); }
+function stopRec(){ if(!rec) return; const r=rec; rec=null; $('#recBtn').classList.remove('rec'); $('#recBtn').textContent='● Clip';
+  try{ r.mr.stop(); }catch(e){} if(flying){ stopFly(); preview(); } lcd('Clip recorded.'); }
+function showClip(blob,ext){ if(exUrl) URL.revokeObjectURL(exUrl); exUrl=URL.createObjectURL(blob); exName='dreamscape-97-clip.'+ext; exRun++;
+  $('#shot').hidden=true; $('#exsz').hidden=true; const v=$('#clip'); v.hidden=false; v.src=exUrl; v.play().catch(()=>{});
+  $('#exmsg').textContent=CLIP_S+' second fly-through ('+ext.toUpperCase()+'). Download it to share.'; $('#dlBtn').disabled=false; $('#overlay').hidden=false; }
 function stopFly(){ flying=false; flyBtn.classList.remove('on'); flyBtn.textContent='Fly'; }
-flyBtn.onclick=()=>{ if(flying){ stopFly(); preview(); lcd('Landed.'); return; }
+flyBtn.onclick=()=>{ if(flying){ if(rec){ stopRec(); return; } stopFly(); preview(); lcd('Landed.'); return; }
   gen++; job=null; rbtn.classList.remove('busy'); setRing(0); flying=true; fLast=0; flyBtn.classList.add('on'); flyBtn.textContent='Stop';
   wire.style.opacity=0; saveBtn.disabled=true; saveBtn.classList.remove('ready'); lcd('Flying around your world… tap Stop to land.'); requestAnimationFrame(fly); };
 rbtn.onclick=()=>{ if(flying) stopFly(); if(rbtn.classList.contains('busy')){preview();lcd('Render stopped.');} else render(); };
-saveBtn.onclick=()=>{ if(!rendered) return; $('#overlay').hidden=false; exportAt(0); };
+saveBtn.onclick=()=>{ if(!rendered) return; const v=$('#clip'); v.pause(); v.hidden=true; $('#shot').hidden=false; $('#exsz').hidden=false; $('#overlay').hidden=false; exportAt(0); };
 document.querySelectorAll('#exsz button').forEach(b=>b.onclick=()=>exportAt(+b.dataset.k));
 $('#dlBtn').onclick=()=>{ if(!exUrl) return; const a=document.createElement('a'); a.href=exUrl; a.download=exName; document.body.appendChild(a); a.click(); a.remove(); };
-$('#closeBtn').onclick=()=>{exRun++; $('#overlay').hidden=true;};
+$('#closeBtn').onclick=()=>{exRun++; $('#clip').pause(); $('#overlay').hidden=true; if(autoR&&!rendered&&!job&&!flying) render();};
 $('#shareBtn2').onclick=()=>shareScene();
 
 // ---------- wireframes (bounding boxes, selected one in red, classic 90s style)
@@ -1152,7 +1178,8 @@ $('#fsBtn').onclick=()=>setImmersive(!document.body.classList.contains('imm'));
 $('#rendBtn2').onclick=()=>rbtn.onclick(); $('#undoBtn').onclick=undo;
 autoR=prefs.get('auto')!=='0'; $('#autoBtn').classList.toggle('on',autoR);
 function setAuto(on){ autoR=on; prefs.set('auto',on?'1':'0'); $('#autoBtn').classList.toggle('on',on); lcd(on?'Auto render on: it renders by itself when you stop editing.':'Auto render off: tap Render when you want the full picture.'); if(on&&!rendered&&!job&&!flying) render(); }
-$('#autoBtn').onclick=()=>setAuto(!autoR); $('#redoBtn').onclick=redo;
+$('#autoBtn').onclick=()=>setAuto(!autoR);
+$('#recBtn').onclick=()=>{ if(rec) stopRec(); else startRec(); }; $('#redoBtn').onclick=redo;
 addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,select')) return;
   if((e.metaKey||e.ctrlKey)&&!e.altKey&&$('#overlay').hidden){ const z=e.key.toLowerCase();
@@ -1164,6 +1191,7 @@ addEventListener('keydown',e=>{
   else if(k==='f'||k==='F'){ setImmersive(!document.body.classList.contains('imm')); }
   else if(k==='s'||k==='S'){ setSquare(!W.square); }
   else if(k==='a'||k==='A'){ setAuto(!autoR); }
+  else if(k==='v'||k==='V'){ if(rec) stopRec(); else startRec(); }
   else if(k==='Escape'){ if(document.body.classList.contains('imm')) setImmersive(false); else if(sel>=0){ select(-1); lcd('Nothing selected.'); } else return; }
   else if((k==='Delete'||k==='Backspace')&&o){ objs.splice(sel,1); select(-1); lcd('Deleted.'); changed(); }
   else if(k.startsWith('Arrow')&&o){ const C=camera(),f=norm([C.ww[0],0,C.ww[2]]),r=[-f[2],0,f[0]],st=e.shiftKey?2:.5;
