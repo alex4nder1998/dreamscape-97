@@ -1,8 +1,22 @@
 # Dreamscape 97
 
+<p>
+<a href="https://alex4nder1998.github.io/dreamscape-97/"><img alt="Open the app" src="https://img.shields.io/badge/%E2%96%B6%20open-the%20app-ff5ec8?style=for-the-badge"></a>
+</p>
+<p>
+<a href="https://github.com/alex4nder1998/dreamscape-97/actions/workflows/pages/pages-build-deployment"><img alt="Site deploy" src="https://github.com/alex4nder1998/dreamscape-97/actions/workflows/pages/pages-build-deployment/badge.svg"></a>
+<a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/alex4nder1998/dreamscape-97"></a>
+<img alt="WebGL 2" src="https://img.shields.io/badge/WebGL-2.0-990000?logo=webgl&logoColor=white">
+<img alt="No build step" src="https://img.shields.io/badge/build%20step-none-2ea44f">
+<img alt="One file" src="https://img.shields.io/badge/one-index.html-555">
+<a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen"></a>
+<a href="https://github.com/alex4nder1998/dreamscape-97/issues?q=label%3Agallery"><img alt="Gallery submissions" src="https://img.shields.io/github/issues/alex4nder1998/dreamscape-97/gallery?label=gallery%20submissions&color=8a63d2"></a>
+<a href="https://github.com/alex4nder1998/dreamscape-97/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/alex4nder1998/dreamscape-97?style=flat"></a>
+</p>
+
 Make late-90s CGI landscapes in your browser: chrome spheres over the sea, giant ringed planets, lava plains, glowing orbs and mirror floors, all with that hard-shadowed, oversaturated look of 90s CD-ROM art and metal album covers.
 
-**[Open it live →](https://alex4nder1998.github.io/dreamscape-97/)**: works on desktop and phone, nothing to install.
+Works on desktop and phone, nothing to install. **[Open it live →](https://alex4nder1998.github.io/dreamscape-97/)**
 
 <p>
 <img src="docs/chrome-sea.jpg" width="32%"> <img src="docs/portal-sea.jpg" width="32%"> <img src="docs/lava-planet.jpg" width="32%">
@@ -14,7 +28,7 @@ Make late-90s CGI landscapes in your browser: chrome spheres over the sea, giant
 - **Create:** drop in terrain, floating islands, spheres, cubes, cylinders, cones, pyramids and rings (up to 10 objects). Pick a checker, sand, grass, rock, mirror or lava ground, or wavy or calm water.
 - **Edit:** tap an object to select it, drag to move it, and set its size, height, lift, turn and tilt. Materials: chrome, glass, gold, red, blue, marble, rock, checker, mountain, white, glow and ice. *Row* repeats an object into the distance.
 - **Sky & Fog:** 10 skies with giant planets, moons, stars, light rays and lens flare. Drag the sun on the dial and set clouds, haze, fog and rays. The *90s look* switch toggles hard shadows, clipped colour and a 16-bit dither.
-- **Scenes:** 14 ready-made worlds to start from.
+- **Scenes:** 14 ready-made worlds to start from, plus community worlds featured from the gallery.
 - **Render** draws the full-quality picture strip by strip, **Save** gives you a JPEG, and **Fly** orbits the camera live.
 
 ## Share your world
