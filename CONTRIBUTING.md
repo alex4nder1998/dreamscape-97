@@ -31,6 +31,16 @@ There's no build step, no npm and no framework. Please keep it that way: a PR th
 
 Add an entry to `SCENES`. Each object is `[type, x, z, {size, stretch, lift, rot, tilt, m, seed}]`. Types are 1 sphere, 2 cube, 3 cylinder, 4 cone, 5 pyramid, 6 torus, 7 terrain, 8 floating island, 9 arch, 10 stairs, 11 twist, 12 crystals, 13 column. `m` is the material index in `MATS`. `az` is the sun's angle from straight ahead in radians. Build the scene in the app first, then copy the numbers.
 
+## Automatic test
+
+Every pull request runs `tests/smoke.mjs` on GitHub. It opens the app in a headless browser with a software renderer and checks that the shader compiles, a render finishes and isn't blank, every preset loads, share links round-trip, and a hostile link is handled safely. To run it yourself (Node 18+):
+
+```sh
+npm i --no-save playwright && npx playwright install chromium && node tests/smoke.mjs
+```
+
+It takes a minute or two, because everything is drawn on the CPU.
+
 ## Pull request checklist
 
 - [ ] Tested in at least one desktop browser **and** on a phone, or in a phone-sized window
