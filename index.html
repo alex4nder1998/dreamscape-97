@@ -4,6 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Dreamscape 97</title>
+<meta name="description" content="Make late-90s CGI landscapes and album covers in your browser: chrome spheres, ringed planets, lava, mirror seas. Free and open source.">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dreamscape">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dreamscape 97">
+<meta property="og:title" content="Dreamscape 97: make 90s CGI worlds">
+<meta property="og:description" content="Make late-90s CGI landscapes and album covers in your browser: chrome spheres, ringed planets, lava, mirror seas. Free and open source.">
+<meta property="og:url" content="https://alex4nder1998.github.io/dreamscape-97/">
+<meta property="og:image" content="https://alex4nder1998.github.io/dreamscape-97/docs/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Chrome lettering reading Dreamscape 97 over red rings floating above a pink sea">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cdefs%3E%3ClinearGradient id=%27s%27 x2=%270%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23ff5ec8%27/%3E%3Cstop offset=%271%27 stop-color=%27%231a0640%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27url(%23s)%27/%3E%3Ccircle cx=%2716%27 cy=%2715%27 r=%277%27 fill=%27%23e8eef3%27/%3E%3Crect y=%2722%27 width=%2732%27 height=%2710%27 fill=%27%231a3a6a%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,400;1,600&family=VT323&family=Orbitron:wght@900&family=Metal+Mania&family=Cinzel+Decorative:wght@900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
@@ -1156,6 +1174,7 @@ if(!shared){ let last=null; try{ last=localStorage.getItem('dc97-last'); }catch(
 layoutStage(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':back?'Welcome back. Your last world is restored (Clear or a scene starts fresh).':'Welcome to Dreamscape 97. Rendering…');
 requestAnimationFrame(()=>{preview(); setTimeout(render,120);});
 })();
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
