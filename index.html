@@ -6,7 +6,7 @@
 <title>Dreamscape 97</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cdefs%3E%3ClinearGradient id=%27s%27 x2=%270%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23ff5ec8%27/%3E%3Cstop offset=%271%27 stop-color=%27%231a0640%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27url(%23s)%27/%3E%3Ccircle cx=%2716%27 cy=%2715%27 r=%277%27 fill=%27%23e8eef3%27/%3E%3Crect y=%2722%27 width=%2732%27 height=%2710%27 fill=%27%231a3a6a%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,400;1,600&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,400;1,600&family=VT323&family=Orbitron:wght@900&family=Metal+Mania&family=Cinzel+Decorative:wght@900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
 <style>
   :root{--glow:#a8e4ff}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -45,6 +45,20 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .vb.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
   #rendBtn2{display:none}
+  #cover{image-rendering:auto !important;pointer-events:none}
+  .tabs{gap:14px !important}
+  .cvs{width:44px;height:30px;border-radius:5px;background:#0d0f16;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;
+    box-shadow:0 0 0 1px rgba(255,255,255,.2),0 2px 3px rgba(0,0,0,.8)}
+  .cvs b{-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ic.on .cvs{box-shadow:0 0 0 2px #fff,0 0 8px 2px var(--glow)}
+  .cin{display:flex;gap:6px}
+  .cin input{flex:1;min-width:0;height:28px;border-radius:7px;border:0;padding:0 9px;font:italic 600 14px 'Exo 2',sans-serif;color:#fff;background:#141414;
+    box-shadow:inset 0 2px 4px #000,0 1px 0 rgba(255,255,255,.12)}
+  .cin input::placeholder{color:#777}
+  .exsz{display:flex;gap:6px}
+  .exsz button{border:0;border-radius:9px;padding:7px 12px;font:italic 600 13px 'Exo 2',sans-serif;color:#ddd;background:#2a2a2a;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+  .exsz button.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
+  .exsz button small{display:block;font-size:10px;opacity:.7}
   body.imm #top,body.imm #deck{display:none}
   body.imm #view{margin:0;border-radius:0;box-shadow:none}
   body.imm #rendBtn2{display:block}
@@ -107,10 +121,11 @@
       <button class="tab" data-tab="edit">Edit</button>
       <button class="tab" data-tab="sky">Sky &amp; Fog</button>
       <button class="tab" data-tab="scenes">Scenes</button>
+      <button class="tab" data-tab="cover">Cover</button>
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas></div><div id="vbtns"><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -125,7 +140,7 @@
     </div>
   </footer>
 </div>
-<div id="overlay" hidden><img id="shot" alt="Your rendered scene"><p>Press and hold the picture (or right-click) to save it.</p><div class="btns" style="width:auto"><button class="mbtn" id="shareBtn2" style="flex:none;padding:10px 22px">🔗 Share link</button><button class="mbtn" id="closeBtn" style="flex:none;padding:10px 30px">Close</button></div></div>
+<div id="overlay" hidden><img id="shot" alt="Your rendered scene"><div class="exsz" id="exsz"><button data-k="0" class="on">Screen<small>as shown</small></button><button data-k="1">Poster<small>2K · smooth</small></button><button data-k="2">Print<small>4K · slow</small></button></div><p id="exmsg">Press and hold the picture (or right-click) to save it.</p><div class="btns" style="width:auto"><button class="mbtn" id="dlBtn" style="flex:none;padding:10px 18px">⬇ Download</button><button class="mbtn" id="shareBtn2" style="flex:none;padding:10px 22px">🔗 Share link</button><button class="mbtn" id="closeBtn" style="flex:none;padding:10px 30px">Close</button></div></div>
 <div id="err"></div>
 
 <script id="fs" type="x-shader/x-fragment">#version 300 es
@@ -133,6 +148,8 @@ precision highp float;
 precision highp int;
 out vec4 fragColor;
 uniform vec2 uRes;
+uniform vec2 uOff;
+uniform float uPix;
 uniform vec3 uRo, uTa, uSun;
 uniform int uN;
 uniform vec4 uA[10];   // type, x, y, z
@@ -428,7 +445,7 @@ vec3 shadeObj(int i, vec3 p, vec3 rd, float t){
 }
 const float BAYER[16]=float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.);
 void main(){
-  vec2 uv=(2.0*gl_FragCoord.xy-uRes)/uRes.y;
+  vec2 uv=(2.0*(gl_FragCoord.xy+uOff)-uRes)/uRes.y;
   vec3 ww=normalize(uTa-uRo), uu=normalize(cross(ww,vec3(0,1,0))), vv=cross(uu,ww);
   vec3 rd=normalize(uv.x*uu+uv.y*vv+1.7*ww);
   vec2 h=hitScene(uRo,rd,320,8);
@@ -464,7 +481,7 @@ void main(){
     // 90s finish: hard clip instead of a gentle roll-off, punchy saturation, 16-bit dither
     col=pow(clamp(col*1.08,0.0,1.0),vec3(0.4545));
     col=mix(vec3(dot(col,vec3(0.299,0.587,0.114))),col,1.38);
-    ivec2 ip=ivec2(gl_FragCoord.xy)&3; float bd=BAYER[ip.y*4+ip.x]/16.0-0.47;
+    ivec2 ip=ivec2(floor((gl_FragCoord.xy+uOff)/uPix))&3; float bd=BAYER[ip.y*4+ip.x]/16.0-0.47;
     col=clamp(col,0.0,1.0);
     col=floor(col*vec3(31.0,63.0,31.0)+bd)/vec3(31.0,63.0,31.0);
   } else {
@@ -514,7 +531,7 @@ const SKIES=[
  {n:'Cosmic',top:'#000008',hor:'#2a1a6a',sun:'#c8d8ff',si:.75,haze:'#3a2a80',clouds:0,hz:.25,fog:.06,elev:18,stars:1,flare:.5,pl:[{ty:2,R:.27,c:'#8ab8ff',c2:'#1a2a80',off:-.5,el:17},{ty:1,R:.06,c:'#ffe8d0',off:.75,el:40}]}
 ];
 let objs=[], sel=-1, tab='create';
-const W={square:false, sky:0, ground:0, sea:false, calm:0, elev:38, az:0, clouds:.55, hz:.3, fog:.12, rays:0, flare:0, retro:true};
+const W={cover:{st:0,band:'',album:''}, square:false, sky:0, ground:0, sea:false, calm:0, elev:38, az:0, clouds:.55, hz:.3, fog:.12, rays:0, flare:0, retro:true};
 const cam={yaw:0.35, pitch:0.16, dist:17, ta:[0,1.6,0]};
 const mk=(t,x,z,o={})=>Object.assign({t,m:DEFMAT[t],x,z,size:1,stretch:1,lift:0,rot:0,tilt:0,seed:Math.round(Math.random()*900)/100},o);
 function defaultScene(){
@@ -539,7 +556,7 @@ gl.linkProgram(prog); if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){console.e
 gl.useProgram(prog);
 gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
 const al=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(al); gl.vertexAttribPointer(al,2,gl.FLOAT,false,0,0);
-const U={}; 'uRes uRo uTa uSun uN uA uB uC cTop cHor cSun cHaze uClouds uHaze uFog uStars uSea uSeaOn uGround uPl uPlC uPlC2 uNoSun uRays uFlare uSunVis uLook uCalm'.split(' ').forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+const U={}; 'uRes uOff uPix uRo uTa uSun uN uA uB uC cTop cHor cSun cHaze uClouds uHaze uFog uStars uSea uSeaOn uGround uPl uPlC uPlC2 uNoSun uRays uFlare uSunVis uLook uCalm'.split(' ').forEach(n=>U[n]=gl.getUniformLocation(prog,n));
 cv.addEventListener('webglcontextlost',e=>{e.preventDefault();fail('The graphics chip gave up on that render. Reload to try again.');});
 
 const lin=h=>{const n=parseInt(h.slice(1),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255].map(c=>Math.pow(c,2.2));};
@@ -558,11 +575,11 @@ function sunDir(){const e=W.elev*Math.PI/180,a=W.az;return [Math.cos(e)*Math.sin
 function sunVisible(C){ const d=sunDir(); if(d[1]<0.01) return 0;
   for(const o of objs){const g=geom(o);const rad=Math.hypot(...g.s)*(o.t>=7?.45:.75);const oc=sub(C.ro,g.p);const b=dot(oc,d),c=dot(oc,oc)-rad*rad;if(b<0&&b*b-c>0) return 0;}
   return 1; }
-function upload(w,h){
+function upload(w,h,off,pix){
   const C=camera(), S=SKIES[W.sky];
   const A=new Float32Array(40),B=new Float32Array(40),M=new Float32Array(40);
   objs.forEach((o,i)=>{const g=geom(o);A.set([o.t,...g.p],i*4);B.set([...g.s,o.rot],i*4);M.set([o.m,o.seed,o.tilt||0,0],i*4);});
-  gl.uniform2f(U.uRes,w||cv.width,h||cv.height); gl.uniform3fv(U.uRo,C.ro); gl.uniform3fv(U.uTa,C.ta); gl.uniform3fv(U.uSun,sunDir());
+  gl.uniform2f(U.uRes,w||cv.width,h||cv.height); gl.uniform2f(U.uOff,off?off[0]:0,off?off[1]:0); gl.uniform1f(U.uPix,pix||1); gl.uniform3fv(U.uRo,C.ro); gl.uniform3fv(U.uTa,C.ta); gl.uniform3fv(U.uSun,sunDir());
   gl.uniform1i(U.uN,objs.length); gl.uniform4fv(U.uA,A); gl.uniform4fv(U.uB,B); gl.uniform4fv(U.uC,M);
   gl.uniform3fv(U.cTop,lin(S.top)); gl.uniform3fv(U.cHor,lin(S.hor)); gl.uniform3fv(U.cSun,lin(S.sun).map(v=>v*S.si)); gl.uniform3fv(U.cHaze,lin(S.haze));
   gl.uniform1f(U.uClouds,W.clouds); gl.uniform1f(U.uHaze,W.hz); gl.uniform1f(U.uFog,W.fog*W.fog*0.03); gl.uniform1f(U.uStars,S.stars);
@@ -585,10 +602,106 @@ function vw(){return [stage.clientWidth,stage.clientHeight];}
 function layoutStage(){ const w=view.clientWidth,h=view.clientHeight;
   if(W.square){const q=Math.max(2,Math.min(w,h));Object.assign(stage.style,{left:((w-q)/2)+'px',top:((h-q)/2)+'px',width:q+'px',height:q+'px'});}
   else Object.assign(stage.style,{left:'0',top:'0',width:'100%',height:'100%'});
-  stage.classList.toggle('sq',!!W.square); const b=document.getElementById('sqBtn'); if(b) b.classList.toggle('on',!!W.square); }
+  stage.classList.toggle('sq',!!W.square); const b=document.getElementById('sqBtn'); if(b) b.classList.toggle('on',!!W.square); if(typeof drawCoverView==='function') drawCoverView(); }
 function sizeTo(scale){const [w,h]=vw();const W2=Math.max(2,Math.round(w*scale)),H2=Math.max(2,Math.round(h*scale));if(cv.width!==W2||cv.height!==H2){cv.width=W2;cv.height=H2;}}
 function fullDraw(scale){sizeTo(scale);gl.disable(gl.SCISSOR_TEST);gl.viewport(0,0,cv.width,cv.height);upload();gl.drawArrays(gl.TRIANGLES,0,3);
   under.width=cv.width;under.height=cv.height;uctx.drawImage(cv,0,0);}
+// ---------- album cover lettering (drawn on a 2D canvas over the render, and into saved images)
+const COVERS=[
+  {n:'Off',f:''},
+  {n:'Chrome',f:'900 {s}px Orbitron',skew:-.16,icon:'linear-gradient(180deg,#fff 0%,#b9cbe6 35%,#2a3a60 50%,#d89a60 56%,#fff 90%)'},
+  {n:'Fire',f:'{s}px "Metal Mania"',icon:'linear-gradient(0deg,#8a0a00,#ff4a00 35%,#ffb020 65%,#fff6a0)'},
+  {n:'Ice',f:'900 {s}px "Cinzel Decorative"',icon:'linear-gradient(180deg,#fff,#bff4ff 45%,#4ab0e8 55%,#0b4a8a)'},
+  {n:'Gold',f:'900 {s}px "Cinzel Decorative"',icon:'linear-gradient(180deg,#fff6c8,#f0c040 45%,#8a5a10 50%,#d8a030 62%,#fff0a0)'}];
+let fontsP=null; const coverFonts=()=>fontsP||(fontsP=document.fonts?Promise.all(['900 40px Orbitron','40px "Metal Mania"','900 40px "Cinzel Decorative"','700 40px Cinzel'].map(f=>document.fonts.load(f))).catch(()=>{}):Promise.resolve());
+const NM={adj:['Crystal','Iron','Eternal','Celestial','Obsidian','Frozen','Burning','Astral','Silver','Crimson','Emerald','Mystic','Thunder','Shadow','Starlit','Sapphire','Dragon','Infinite','Golden','Fallen'],
+  noun:['Throne','Kingdom','Prophecy','Sword','Horizon','Citadel','Oracle','Valkyrie','Storm','Phoenix','Realm','Tower','Legion','Moon','Gate','Dawn','Spire','Empire','Tide','Covenant'],
+  band:['Dragon','Storm','Star','Iron','Frost','Wolf','Blade','Fire','Sky','Rune','Night','Thunder'],tail:['heart','forge','fall','gate','crown','wind','born','fire','rider','wing','keep','light'],
+  place:['Avalon','Atlantis','Elysium','Valhalla','Hyperborea','the Crystal Moon','the Ninth Sky','the Silver Sea','Lemuria','the Endless Shore']};
+const pickN=a=>a[Math.floor(Math.random()*a.length)];
+function nameIt(){
+  const b=[()=>pickN(NM.band)+pickN(NM.tail),()=>pickN(NM.adj)+' '+pickN(NM.noun),()=>pickN(NM.noun)+' of '+pickN(NM.noun)+'s',()=>pickN(NM.adj)+' '+pickN(NM.band)+pickN(NM.tail)];
+  const a=[()=>'Chronicles of the '+pickN(NM.adj)+' '+pickN(NM.noun),()=>'Beyond the '+pickN(NM.noun),()=>'Return to '+pickN(NM.place),()=>'The '+pickN(NM.noun)+' Eternal',
+    ()=>'Ride of the '+pickN(NM.adj)+' '+pickN(NM.noun),()=>'Gates of '+pickN(NM.place),()=>'Under a '+pickN(NM.adj)+' '+pickN(NM.noun),()=>'Legends of '+pickN(NM.place)];
+  W.cover.band=pickN(b)(); W.cover.album=pickN(a)();
+}
+function fitFont(c,f,text,maxW,s){ for(let k=0;k<40;k++){ c.font=f.replace('{s}',s.toFixed(1)); if(c.measureText(text).width<=maxW) break; s*=.93; } return s; }
+function sparkle(c,x,y,r){ c.save(); c.shadowColor='#fff'; c.shadowBlur=r*.8; c.fillStyle='#fff'; c.beginPath(); c.moveTo(x,y-r);
+  c.quadraticCurveTo(x,y,x+r*.8,y); c.quadraticCurveTo(x,y,x,y+r); c.quadraticCurveTo(x,y,x-r*.8,y); c.quadraticCurveTo(x,y,x,y-r); c.fill();
+  c.beginPath(); c.arc(x,y,r*.12,0,7); c.fill(); c.restore(); }
+function logo(c,st,text,cx,cy,maxW,size){
+  size=fitFont(c,st.f,text,maxW,size); c.save(); c.translate(cx,cy); if(st.skew) c.transform(1,0,st.skew,1,0,0);
+  c.textAlign='center'; c.textBaseline='middle'; c.lineJoin='round'; const hw=c.measureText(text).width/2, t=-size*.4, b=size*.4;
+  const G=st=>{const g=c.createLinearGradient(0,t,0,b); st.forEach(([o,col])=>g.addColorStop(o,col)); return g;};
+  const k=st.n;
+  if(k==='Chrome'){
+    c.shadowColor='rgba(0,0,0,.75)'; c.shadowBlur=size*.18; c.shadowOffsetY=size*.06; c.lineWidth=size*.17; c.strokeStyle='#0a1430'; c.strokeText(text,0,0);
+    c.shadowColor='transparent'; c.lineWidth=size*.075; c.strokeStyle=G([[0,'#fff'],[.5,'#7d93b8'],[1,'#eef4ff']]); c.strokeText(text,0,0);
+    c.fillStyle=G([[0,'#fff'],[.28,'#c3d3ec'],[.48,'#3b5280'],[.5,'#18223e'],[.55,'#b8784a'],[.72,'#ffe6c4'],[1,'#fff']]); c.fillText(text,0,0);
+    sparkle(c,-hw+size*.3,t+size*.04,size*.42); sparkle(c,hw-size*.2,b-size*.1,size*.22);
+  } else if(k==='Fire'){
+    c.shadowColor='#ff5a00'; c.shadowBlur=size*.55; c.lineWidth=size*.12; c.strokeStyle='#3a0500'; c.strokeText(text,0,0);
+    c.shadowBlur=size*.2; c.fillStyle=G([[0,'#fff8b0'],[.35,'#ffc020'],[.7,'#ff4a00'],[1,'#9a0c00']]); c.fillText(text,0,0); c.shadowColor='transparent'; c.fillText(text,0,0);
+  } else if(k==='Ice'){
+    c.shadowColor='#5fe4ff'; c.shadowBlur=size*.4; c.lineWidth=size*.13; c.strokeStyle='#021a34'; c.strokeText(text,0,0); c.shadowColor='transparent';
+    c.fillStyle=G([[0,'#fff'],[.45,'#c4f6ff'],[.55,'#46ace6'],[1,'#0a4688']]); c.fillText(text,0,0);
+    c.lineWidth=Math.max(1,size*.02); c.strokeStyle='rgba(255,255,255,.85)'; c.strokeText(text,0,0); sparkle(c,hw-size*.25,t+size*.05,size*.36);
+  } else {
+    c.shadowColor='rgba(0,0,0,.8)'; c.shadowBlur=size*.2; c.shadowOffsetY=size*.05; c.lineWidth=size*.13; c.strokeStyle='#2a1600'; c.strokeText(text,0,0); c.shadowColor='transparent';
+    c.fillStyle=G([[0,'#fff7cc'],[.42,'#f2c444'],[.5,'#86560e'],[.6,'#dca234'],[1,'#fff2a8']]); c.fillText(text,0,0); sparkle(c,-hw+size*.25,t+size*.06,size*.36);
+  }
+  c.restore();
+}
+function drawCover(c,w,h){
+  const C=W.cover; if(!C||!C.st) return; const st=COVERS[C.st], u=Math.min(w,h);
+  if(C.band.trim()) logo(c,st,C.band.trim(),w/2,h*.135,w*.86,u*.17);
+  const al=C.album.trim(); if(al){ c.save(); const sz=fitFont(c,'700 {s}px Cinzel',al.toUpperCase(),w*.84,u*.052);
+    c.font='700 '+sz.toFixed(1)+'px Cinzel'; c.textAlign='center'; c.textBaseline='middle'; try{c.letterSpacing=(sz*.12).toFixed(1)+'px';}catch(e){}
+    c.shadowColor='rgba(0,0,0,.9)'; c.shadowBlur=sz*.35; c.shadowOffsetY=sz*.06;
+    c.fillStyle={Fire:'#ffdca0',Ice:'#e8fbff',Gold:'#ffe8a0'}[st.n]||'#f2f5ff'; c.fillText(al.toUpperCase(),w/2,h*.9); c.restore(); }
+}
+const coverCv=$('#cover'), coverCtx=coverCv.getContext('2d'); let coverKey='';
+function drawCoverView(force){ const w=stage.clientWidth,h=stage.clientHeight,d=Math.min(2,devicePixelRatio||1), k=w+'x'+h+JSON.stringify(W.cover);
+  if(!force&&k===coverKey) return; coverKey=k; coverCv.width=Math.max(1,Math.round(w*d)); coverCv.height=Math.max(1,Math.round(h*d));
+  coverCtx.setTransform(d,0,0,d,0,0); coverCtx.clearRect(0,0,w,h); drawCover(coverCtx,w,h);
+  if(W.cover.st) coverFonts().then(()=>{ if(coverKey===k){ coverCtx.setTransform(d,0,0,d,0,0); coverCtx.clearRect(0,0,w,h); drawCover(coverCtx,w,h);} }); }
+
+// ---------- big renders: drawn in tiles (uOff) into a small framebuffer, so memory stays low; ss = supersampling
+async function renderBig(L,ss,prog,abort){
+  const asp=cv.width/cv.height, w=asp>=1?L:Math.round(L*asp), h=asp>=1?Math.round(L/asp):L, mx=gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  while(ss>1&&w*ss>mx) ss--; const iw=w*ss, ih=h*ss; if(iw>mx) throw new Error('too wide');
+  const rows=Math.min(ih,Math.max(ss,Math.floor(9e5/iw/ss)*ss));
+  const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,iw,rows,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); const fb=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0); gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  const out=document.createElement('canvas'); out.width=w; out.height=h; const o2=out.getContext('2d'); o2.imageSmoothingEnabled=true; o2.imageSmoothingQuality='high';
+  const sc=document.createElement('canvas'); sc.width=iw; sc.height=rows; const s2=sc.getContext('2d'), img=s2.createImageData(iw,rows), px=new Uint8Array(iw*rows*4);
+  try{
+    for(let top=0;top<ih;top+=rows){
+      if(abort()) return null;
+      const n=Math.min(rows,ih-top), y0=ih-top-n, vp=gl.getParameter(gl.VIEWPORT), scis=gl.isEnabled(gl.SCISSOR_TEST);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fb); gl.disable(gl.SCISSOR_TEST); gl.viewport(0,0,iw,rows);
+      upload(iw,ih,[0,y0],ss); gl.drawArrays(gl.TRIANGLES,0,3); gl.readPixels(0,0,iw,n,gl.RGBA,gl.UNSIGNED_BYTE,px);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(vp[0],vp[1],vp[2],vp[3]); if(scis) gl.enable(gl.SCISSOR_TEST);
+      for(let r=0;r<n;r++) img.data.set(px.subarray((n-1-r)*iw*4,(n-r)*iw*4),r*iw*4);
+      s2.putImageData(img,0,0); o2.drawImage(sc,0,0,iw,n,0,top/ss,w,n/ss);
+      prog((top+n)/ih); await new Promise(r=>setTimeout(r,0));
+    }
+  } finally { gl.deleteFramebuffer(fb); gl.deleteTexture(tex); }
+  return out;
+}
+const EXS=[null,[2048,2],[4096,2]]; let exUrl=null, exRun=0, exName='dreamscape-97.jpg';
+function setShot(canvas,name){ $('#dlBtn').disabled=true; canvas.toBlob(b=>{ if(!b) return; if(exUrl) URL.revokeObjectURL(exUrl); exUrl=URL.createObjectURL(b); exName=name; $('#shot').src=exUrl; $('#dlBtn').disabled=false; },'image/jpeg',.93); }
+async function exportAt(k){
+  const my=++exRun, msg=$('#exmsg'); document.querySelectorAll('#exsz button').forEach(b=>b.classList.toggle('on',+b.dataset.k===k));
+  if(k===0){ await coverFonts(); if(my!==exRun) return; const o=document.createElement('canvas'); o.width=cv.width; o.height=cv.height; const c=o.getContext('2d');
+    c.drawImage(cv,0,0); drawCover(c,o.width,o.height); setShot(o,'dreamscape-97.jpg'); msg.textContent='Press and hold the picture (or right-click) to save it.'; return; }
+  const lbl=k===1?'poster':'print'; msg.textContent='Rendering '+lbl+'… 0%'; $('#dlBtn').disabled=true;
+  try{ const big=await renderBig(EXS[k][0],EXS[k][1],f=>{ if(my===exRun) msg.textContent='Rendering '+lbl+'… '+Math.round(f*100)+'%'; },()=>my!==exRun);
+    if(!big||my!==exRun) return; await coverFonts(); drawCover(big.getContext('2d'),big.width,big.height);
+    setShot(big,'dreamscape-97-'+big.width+'x'+big.height+'.jpg'); msg.textContent=big.width+' × '+big.height+' ready. Download it, or press and hold to save.';
+  }catch(e){ console.error(e); if(my===exRun) msg.textContent='This device could not render that size. Try a smaller one.'; }
+}
 function setRing(f){ring.style.strokeDashoffset=207.3*(1-f);}
 function preview(){
   layoutStage(); const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
@@ -624,8 +737,10 @@ flyBtn.onclick=()=>{ if(flying){ stopFly(); preview(); lcd('Landed.'); return; }
   gen++; job=null; rbtn.classList.remove('busy'); setRing(0); flying=true; fLast=0; flyBtn.classList.add('on'); flyBtn.textContent='Stop';
   wire.style.opacity=0; saveBtn.disabled=true; saveBtn.classList.remove('ready'); lcd('Flying around your world… tap Stop to land.'); requestAnimationFrame(fly); };
 rbtn.onclick=()=>{ if(flying) stopFly(); if(rbtn.classList.contains('busy')){preview();lcd('Render stopped.');} else render(); };
-saveBtn.onclick=()=>{ if(!rendered) return; $('#shot').src=cv.toDataURL('image/jpeg',0.93); $('#overlay').hidden=false; };
-$('#closeBtn').onclick=()=>{$('#overlay').hidden=true;};
+saveBtn.onclick=()=>{ if(!rendered) return; $('#overlay').hidden=false; exportAt(0); };
+document.querySelectorAll('#exsz button').forEach(b=>b.onclick=()=>exportAt(+b.dataset.k));
+$('#dlBtn').onclick=()=>{ if(!exUrl) return; const a=document.createElement('a'); a.href=exUrl; a.download=exName; document.body.appendChild(a); a.click(); a.remove(); };
+$('#closeBtn').onclick=()=>{exRun++; $('#overlay').hidden=true;};
 $('#shareBtn2').onclick=()=>shareScene();
 
 // ---------- wireframes (bounding boxes, selected one in red, classic 90s style)
@@ -693,6 +808,10 @@ function buildStrip(){
     if(community===null){ strip_.appendChild(ic(ICON.globe,'Loading…',false,null,true)); loadCommunity(); }
     else if(!community.length) strip_.appendChild(ic(ICON.globe,commErr?'Offline':'Be first!',false,submitScene));
     else community.forEach((p,i)=>{const b=ic('<img class="shot" alt="" src="'+esc(p.img)+'">',esc(p.n),curComm===i,()=>loadComm(i));b.classList.add('wide');strip_.appendChild(b);});
+  } else if(tab==='cover'){
+    COVERS.forEach((c,i)=>strip_.appendChild(ic('<div class="cvs">'+(i?'<b style="font:'+c.f.replace('{s}','19')+';background-image:'+c.icon+'">Aa</b>':'<span style="color:#888;font-size:13px">off</span>')+'</div>',c.n,W.cover.st===i,()=>{
+      W.cover.st=i; if(i&&!W.cover.band&&!W.cover.album) nameIt(); buildStrip(); buildCtx(); drawCoverView(true);
+      lcd(i?c.n+' lettering.'+(W.square?'':' Tip: press 1:1 for a square album cover.'):'Cover text off.');})));
   } else {
     SKIES.forEach((s,i)=>strip_.appendChild(ic('<div class="sky" style="background:linear-gradient(180deg,'+s.top+','+s.hor+')"><i style="left:'+(14+i*3)+'px;top:'+(20-s.elev/4)+'px;background:'+s.sun+'"></i></div>',s.n,W.sky===i,()=>{applySky(i,true);})));
     strip_.appendChild(sep());
@@ -730,6 +849,15 @@ function buildCtx(){
     const s1=document.createElement('button');s1.className='mbtn';s1.textContent='🔗 Share';s1.onclick=shareScene;
     const s2=document.createElement('button');s2.className='mbtn';s2.textContent='⬆ Submit';s2.onclick=submitScene;
     b.append(s1,s2); ctx.append(n,b);
+  } else if(tab==='cover'){
+    const w=document.createElement('div');w.className='cin';
+    const mkIn=(ph,max,k)=>{const i=document.createElement('input');i.placeholder=ph;i.maxLength=max;i.value=W.cover[k];i.id='cin_'+k;i.autocomplete='off';
+      i.oninput=()=>{W.cover[k]=i.value; if(!W.cover.st&&i.value){W.cover.st=1;buildStrip();} drawCoverView(true);}; return i;};
+    w.append(mkIn('Band name',36,'band'),mkIn('Album title',48,'album'));
+    const b=document.createElement('div');b.className='btns';b.style.marginTop='6px';
+    const s1=document.createElement('button');s1.className='mbtn';s1.textContent='🎲 Name it';s1.onclick=()=>{nameIt();if(!W.cover.st)W.cover.st=1;buildStrip();buildCtx();drawCoverView(true);lcd(W.cover.band+': '+W.cover.album);};
+    const s2=document.createElement('button');s2.className='mbtn';s2.textContent='Clear text';s2.onclick=()=>{W.cover.band='';W.cover.album='';buildCtx();drawCoverView(true);lcd('Text cleared.');};
+    b.append(s1,s2); ctx.append(w,b);
   } else {
     const r=document.createElement('div');r.className='row';r.style.gap='10px';
     const dial=document.createElement('div');dial.id='dial';dial.innerHTML='<span>sun</span><i></i>';
@@ -744,7 +872,7 @@ function buildCtx(){
 function syncCtx(){syncers.forEach(f=>f());}
 function updCount(){const c=$('#count');if(c)c.textContent='Objects: '+objs.length+' / 10 · drag the view to look around';}
 function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));buildStrip();buildCtx();
-  lcd(t==='create'?'Tap a shape to drop it into the world.':t==='edit'?(sel<0?'Tap an object to select it.':'Editing the '+TNAME[objs[sel].t]+'. Drag in the view to move it.'):t==='scenes'?'Pick a classic scene to load.':'Pick a sky. Drag the sun on the dial.');}
+  lcd(t==='create'?'Tap a shape to drop it into the world.':t==='edit'?(sel<0?'Tap an object to select it.':'Editing the '+TNAME[objs[sel].t]+'. Drag in the view to move it.'):t==='scenes'?'Pick a classic scene to load.':t==='cover'?'Album cover: pick a lettering style and type a band name.':'Pick a sky. Drag the sun on the dial.');}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 function select(i){sel=i;wire.style.opacity=1;drawWires();if(tab==='edit'){buildStrip();buildCtx();}updCount();}
 function applySky(i,msg){const s=SKIES[i];W.sky=i;W.clouds=s.clouds;W.hz=s.hz;W.fog=s.fog;W.elev=s.elev;W.rays=s.rays||0;W.flare=s.flare||0;if(tab==='sky'){buildStrip();syncCtx();placeSun();}if(msg){lcd(s.n+' sky.');changed();}}
@@ -836,6 +964,7 @@ function loadState(p){
   W.clouds=p.clouds??s.clouds; W.hz=p.hz??s.hz; W.fog=p.fog??s.fog; W.elev=p.elev??s.elev; W.az=cam.yaw+Math.PI+p.az;
   if(p.retro!=null) W.retro=p.retro;
   if(p.square!=null) W.square=p.square;
+  if(p.cover) W.cover={...p.cover};
 }
 // ---------- thumbnails: drawn into an offscreen framebuffer so the picture on screen is never disturbed
 const TW=120,TH=80; let fbo=null; const tcv=document.createElement('canvas'); tcv.width=TW; tcv.height=TH; const tctx=tcv.getContext('2d');
@@ -866,9 +995,12 @@ function encodeScene(){
   const d=[1,W.sky,W.ground,W.sea?1:0,r2(W.calm),r2(W.elev),r3(W.az-cam.yaw-Math.PI),r2(W.clouds),r2(W.hz),r2(W.fog),r2(W.rays),r2(W.flare),W.retro?1:0,
     [r3(cam.yaw),r3(cam.pitch),r2(cam.dist),...cam.ta.map(r2)],
     objs.map(o=>[o.t,o.m,r2(o.x),r2(o.z),r3(o.size),r3(o.stretch),r2(o.lift),r3(o.rot),r3(o.tilt||0),r2(o.seed)]),W.square?1:0];
-  return btoa(JSON.stringify(d)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  if(W.cover.st&&(W.cover.band.trim()||W.cover.album.trim())) d.push([W.cover.st,W.cover.band.slice(0,36),W.cover.album.slice(0,48)]);
+  return btoa(JSON.stringify(d).replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 // links and gallery entries come from strangers: every value is checked and clamped, anything odd is dropped
+function coverOf(a){ const T=(v,n)=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g,'').slice(0,n):'';
+  if(!Array.isArray(a)) return {st:0,band:'',album:''}; const st=Number.isInteger(a[0])&&a[0]>0&&a[0]<COVERS.length?a[0]:0; return {st,band:T(a[1],36),album:T(a[2],48)}; }
 function decodeScene(str){
   try{
     if(typeof str!=='string'||str.length>6000||!/^[A-Za-z0-9_-]+$/.test(str)) return null;
@@ -876,7 +1008,7 @@ function decodeScene(str){
     if(!Array.isArray(d)||d[0]!==1||!Array.isArray(d[13])||!Array.isArray(d[14])) return null;
     const N=(v,lo,hi,df)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,v)):df, I=(v,lo,hi,df)=>Math.round(N(v,lo,hi,df)), c=d[13];
     return {sky:I(d[1],0,SKIES.length-1,0),ground:I(d[2],0,GROUNDS.length-1,0),sea:d[3]===1,calm:N(d[4],0,1,0),elev:N(d[5],1,90,30),az:N(d[6],-50,50,0),
-      clouds:N(d[7],0,1,.5),hz:N(d[8],0,1,.3),fog:N(d[9],0,1,.1),rays:N(d[10],0,1,0),flare:N(d[11],0,1,0),retro:d[12]!==0,square:d.length>15?d[15]===1:null,
+      clouds:N(d[7],0,1,.5),hz:N(d[8],0,1,.3),fog:N(d[9],0,1,.1),rays:N(d[10],0,1,0),flare:N(d[11],0,1,0),retro:d[12]!==0,square:d.length>15?d[15]===1:null,cover:coverOf(d[16]),
       cam:{yaw:N(c[0],-100,100,.35),pitch:N(c[1],-.05,1.35,.16),dist:N(c[2],4,140,17),ta:[N(c[3],-300,300,0),N(c[4],-50,50,1.6),N(c[5],-300,300,0)]},
       o:d[14].slice(0,10).filter(a=>Array.isArray(a)&&Number.isInteger(a[0])&&TNAME[a[0]]).map(a=>[a[0],N(a[2],-250,250,0),N(a[3],-250,250,0),
         {m:I(a[1],0,MATS.length-1,0),size:N(a[4],.2,4,1),stretch:N(a[5],.2,4,1),lift:N(a[6],0,12,0),rot:N(a[7],-100,100,0),tilt:N(a[8],0,1.6,0),seed:N(a[9],0,100,1)}])};
@@ -989,6 +1121,7 @@ $('#rendBtn2').onclick=()=>rbtn.onclick();
 addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,select')) return; if(e.metaKey||e.ctrlKey||e.altKey) return;
   const k=e.key, o=objs[sel];
+  if(!$('#overlay').hidden){ if(k==='Escape'){ $('#closeBtn').onclick(); e.preventDefault(); } return; }
   if(k==='r'||k==='R'){ rbtn.onclick(); }
   else if(k==='f'||k==='F'){ setImmersive(!document.body.classList.contains('imm')); }
   else if(k==='s'||k==='S'){ setSquare(!W.square); }
