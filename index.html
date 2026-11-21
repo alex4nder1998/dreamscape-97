@@ -780,35 +780,56 @@ let flying=false, fScale=1/5, fLast=0; const flyBtn=$('#flyBtn');
 function fly(ts){ if(!flying) return;
   const dt=fLast?Math.min(0.1,(ts-fLast)/1000):0.016;
   if(fLast){ const ms=ts-fLast; if(ms>70) fScale=Math.max(1/12,fScale*0.88); else if(ms<34) fScale=Math.min(1/2.5,fScale*1.05); }
-  fLast=ts; cam.yaw+=dt*0.22*(rec?1.9:1); cam.pitch=0.14+0.09*Math.sin(ts/2600); placeSun&&placeSun();
-  fullDraw(fScale); if(rec) recFrame(); requestAnimationFrame(fly); }
+  fLast=ts; cam.yaw+=dt*0.22; cam.pitch=0.14+0.09*Math.sin(ts/2600); placeSun&&placeSun();
+  fullDraw(fScale); requestAnimationFrame(fly); }
 // ---------- fly-through clips: frames are copied to a fixed-size 2D canvas (with the cover text) and recorded
-let rec=null; const CLIP_S=10;
+// Every frame is a full-quality render (tiled, like posters), then handed to the recorder one at a time.
+// The recorder is paused while a frame renders and resumed for exactly one frame's length, so playback runs at a steady FPS.
+let rec=null; const CLIP_S=8, FPS=30;
 function clipType(){ const T=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm']; if(!window.MediaRecorder) return null;
   for(const t of T){ try{ if(MediaRecorder.isTypeSupported(t)) return t; }catch(e){} } return ''; }
-function recFrame(){ const c=rec.c2; c.imageSmoothingEnabled=true; c.drawImage(cv,0,0,rec.cv.width,rec.cv.height); drawCover(c,rec.cv.width,rec.cv.height);
-  const left=Math.max(0,Math.ceil(CLIP_S-(performance.now()-rec.t0)/1000)); if(left!==rec.left){ rec.left=left; lcd('Recording… '+left+' s'); } if(left<=0) stopRec(); }
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function startRec(){
   const type=clipType(); if(type===null){ lcd('This browser cannot record video.'); return; }
-  await coverFonts(); const asp=cv.width/cv.height, L=Math.min(1280,Math.max(640,Math.round(stage.clientWidth*Math.min(2,devicePixelRatio||1))));
-  const w=(asp>=1?L:Math.round(L*asp))&~1, h=(asp>=1?Math.round(L/asp):L)&~1;
-  const out=document.createElement('canvas'); out.width=w; out.height=h; const c2=out.getContext('2d'); c2.fillStyle='#000'; c2.fillRect(0,0,w,h);
-  const st=out.captureStream(30), chunks=[]; let mr;
-  try{ mr=new MediaRecorder(st,type?{mimeType:type,videoBitsPerSecond:8e6}:{videoBitsPerSecond:8e6}); }catch(e){ lcd('This browser cannot record video.'); return; }
-  rec={cv:out,c2,mr,t0:performance.now(),left:-1}; mr.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
-  mr.onstop=()=>{ const t=mr.mimeType||type||'video/webm', blob=new Blob(chunks,{type:t}); showClip(blob,/mp4/.test(t)?'mp4':'webm'); };
-  mr.start(250); $('#recBtn').classList.add('rec'); $('#recBtn').textContent='■ Stop';
-  if(!flying) flyBtn.onclick(); }
-function stopRec(){ if(!rec) return; const r=rec; rec=null; $('#recBtn').classList.remove('rec'); $('#recBtn').textContent='● Clip';
-  try{ r.mr.stop(); }catch(e){} if(flying){ stopFly(); preview(); } lcd('Clip recorded.'); }
-function showClip(blob,ext){ if(exUrl) URL.revokeObjectURL(exUrl); exUrl=URL.createObjectURL(blob); exName='dreamscape-97-clip.'+ext; exRun++;
+  if(flying){ stopFly(); }
+  await coverFonts(); const L=Math.min(1280,Math.max(720,Math.round(Math.max(stage.clientWidth,stage.clientHeight)*Math.min(2,devicePixelRatio||1))));
+  const asp=cv.width/cv.height, w=(asp>=1?L:Math.round(L*asp))&~1, h=(asp>=1?Math.round(L/asp):L)&~1;
+  const out=document.createElement('canvas'); out.width=w; out.height=h; const c2=out.getContext('2d');
+  const st=out.captureStream(0), track=st.getVideoTracks()[0], chunks=[]; let mr;
+  try{ mr=new MediaRecorder(st,type?{mimeType:type,videoBitsPerSecond:10e6}:{videoBitsPerSecond:10e6}); }catch(e){ lcd('This browser cannot record video.'); return; }
+  const me={stop:false}; rec=me; mr.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  const done=new Promise(r=>mr.onstop=r);
+  $('#recBtn').classList.add('rec'); $('#recBtn').textContent='■ Stop'; view.style.pointerEvents='none';
+  gen++; job=null; rbtn.classList.remove('busy'); setRing(0); wire.style.opacity=0;
+  const y0=cam.yaw, p0=cam.pitch, N=CLIP_S*FPS, t0=performance.now(); let n=0;
+  try{
+    mr.start(); await wait(50); mr.pause();
+    for(let f=0;f<N&&!me.stop;f++){
+      cam.yaw=y0+f/FPS*0.4; cam.pitch=Math.max(0.02,p0+0.05*Math.sin(f/N*Math.PI*2));
+      const big=await renderBig(L,1,()=>{},()=>me.stop); if(!big) break;
+      c2.drawImage(big,0,0,w,h); drawCover(c2,w,h); fullDrawFrom(big);
+      mr.resume(); track.requestFrame&&track.requestFrame(); await wait(1000/FPS); mr.pause(); n++;
+      const el=(performance.now()-t0)/1000, left=Math.round(el/(f+1)*(N-f-1));
+      lcd('Rendering clip: frame '+(f+1)+' of '+N+' · about '+(left>90?Math.round(left/60)+' min':left+' s')+' left'); setRing((f+1)/N);
+    }
+    mr.resume(); await wait(30); mr.stop(); await done;
+  } catch(e){ console.error(e); try{ mr.stop(); }catch(_){} }
+  rec=null; $('#recBtn').classList.remove('rec'); $('#recBtn').textContent='● Clip'; view.style.pointerEvents=''; setRing(0);
+  cam.yaw=y0; cam.pitch=p0; preview();
+  if(n<FPS){ lcd('Clip cancelled.'); return; }
+  const t=mr.mimeType||type||'video/webm'; showClip(new Blob(chunks,{type:t}),/mp4/.test(t)?'mp4':'webm',n/FPS); lcd('Clip ready.');
+}
+function stopRec(){ if(rec){ rec.stop=true; lcd('Stopping…'); } }
+// show each finished frame in the view too, so you can watch the clip being made
+function fullDrawFrom(img){ under.width=img.width; under.height=img.height; uctx.drawImage(img,0,0); gl.clearColor(0,0,0,0); gl.disable(gl.SCISSOR_TEST); gl.clear(gl.COLOR_BUFFER_BIT); }
+function showClip(blob,ext,secs){ if(exUrl) URL.revokeObjectURL(exUrl); exUrl=URL.createObjectURL(blob); exName='dreamscape-97-clip.'+ext; exRun++;
   $('#shot').hidden=true; $('#exsz').hidden=true; const v=$('#clip'); v.hidden=false; v.src=exUrl; v.play().catch(()=>{});
-  $('#exmsg').textContent=CLIP_S+' second fly-through ('+ext.toUpperCase()+'). Download it to share.'; $('#dlBtn').disabled=false; $('#overlay').hidden=false; }
+  $('#exmsg').textContent=(Math.round(secs*10)/10)+' second fly-through ('+ext.toUpperCase()+'). Download it to share.'; $('#dlBtn').disabled=false; $('#overlay').hidden=false; }
 function stopFly(){ flying=false; flyBtn.classList.remove('on'); flyBtn.textContent='Fly'; }
-flyBtn.onclick=()=>{ if(flying){ if(rec){ stopRec(); return; } stopFly(); preview(); lcd('Landed.'); return; }
+flyBtn.onclick=()=>{ if(rec) return; if(flying){ stopFly(); preview(); lcd('Landed.'); return; }
   gen++; job=null; rbtn.classList.remove('busy'); setRing(0); flying=true; fLast=0; flyBtn.classList.add('on'); flyBtn.textContent='Stop';
   wire.style.opacity=0; saveBtn.disabled=true; saveBtn.classList.remove('ready'); lcd('Flying around your world… tap Stop to land.'); requestAnimationFrame(fly); };
-rbtn.onclick=()=>{ if(flying) stopFly(); if(rbtn.classList.contains('busy')){preview();lcd('Render stopped.');} else render(); };
+rbtn.onclick=()=>{ if(rec){ stopRec(); return; } if(flying) stopFly(); if(rbtn.classList.contains('busy')){preview();lcd('Render stopped.');} else render(); };
 saveBtn.onclick=()=>{ if(!rendered) return; const v=$('#clip'); v.pause(); v.hidden=true; $('#shot').hidden=false; $('#exsz').hidden=false; $('#overlay').hidden=false; exportAt(0); };
 document.querySelectorAll('#exsz button').forEach(b=>b.onclick=()=>exportAt(+b.dataset.k));
 $('#dlBtn').onclick=()=>{ if(!exUrl) return; const a=document.createElement('a'); a.href=exUrl; a.download=exName; document.body.appendChild(a); a.click(); a.remove(); };
@@ -1205,6 +1226,7 @@ addEventListener('keydown',e=>{
     if(z==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; } if(z==='y'){ e.preventDefault(); redo(); return; } }
   if(e.metaKey||e.ctrlKey||e.altKey) return;
   const k=e.key, o=objs[sel];
+  if(rec){ if(k==='v'||k==='V'||k==='Escape') stopRec(); e.preventDefault(); return; }
   if(!$('#overlay').hidden){ if(k==='Escape'){ $('#closeBtn').onclick(); e.preventDefault(); } return; }
   if(k==='r'||k==='R'){ rbtn.onclick(); }
   else if(k==='f'||k==='F'){ setImmersive(!document.body.classList.contains('imm')); }
