@@ -11,7 +11,7 @@
   :root{--glow:#a8e4ff}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:#1a1a1a;color:#ddd;font-family:'Exo 2',sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
-  #app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:900px;margin:0 auto;
+  #app{display:flex;flex-direction:column;height:100vh;height:100dvh;margin:0 auto;
     background:#2b2b2b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
   /* top palette */
   #top{background:linear-gradient(180deg,#767676 0,#4e4e4e 28%,#363636 100%);padding:calc(env(safe-area-inset-top) + 4px) 8px 7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 0 #0d0d0d;border-bottom:1px solid #000;position:relative;z-index:2}
@@ -36,6 +36,18 @@
   .sep{flex:none;width:2px;height:44px;margin:0 6px;background:linear-gradient(90deg,#0c0c0c 50%,#5a5a5a 50%)}
   /* viewport */
   #view{flex:1;position:relative;margin:8px 8px 6px;border-radius:3px;background:#000;box-shadow:0 0 0 2px #0c0c0c,0 0 0 4px #5c5c5c,0 0 0 5px #222;overflow:hidden;min-height:120px}
+  .strip{max-width:900px;margin:0 auto}
+  #deck>*{max-width:900px;margin-left:auto;margin-right:auto}
+  #stage{position:absolute;left:0;top:0;width:100%;height:100%}
+  #stage.sq{box-shadow:0 0 0 1px #3a3a3a,0 0 30px rgba(0,0,0,.8)}
+  #vbtns{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:3}
+  .vb{border:0;border-radius:9px;min-width:38px;height:32px;padding:0 9px;font:italic 600 13px 'Exo 2',sans-serif;color:#eee;background:rgba(30,30,30,.62);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .vb.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
+  #rendBtn2{display:none}
+  body.imm #top,body.imm #deck{display:none}
+  body.imm #view{margin:0;border-radius:0;box-shadow:none}
+  body.imm #rendBtn2{display:block}
   #view canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
   #wire{image-rendering:auto !important;transition:opacity .4s}
   /* deck */
@@ -98,7 +110,7 @@
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas></div><div id="vbtns"><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -502,7 +514,7 @@ const SKIES=[
  {n:'Cosmic',top:'#000008',hor:'#2a1a6a',sun:'#c8d8ff',si:.75,haze:'#3a2a80',clouds:0,hz:.25,fog:.06,elev:18,stars:1,flare:.5,pl:[{ty:2,R:.27,c:'#8ab8ff',c2:'#1a2a80',off:-.5,el:17},{ty:1,R:.06,c:'#ffe8d0',off:.75,el:40}]}
 ];
 let objs=[], sel=-1, tab='create';
-const W={sky:0, ground:0, sea:false, calm:0, elev:38, az:0, clouds:.55, hz:.3, fog:.12, rays:0, flare:0, retro:true};
+const W={square:false, sky:0, ground:0, sea:false, calm:0, elev:38, az:0, clouds:.55, hz:.3, fog:.12, rays:0, flare:0, retro:true};
 const cam={yaw:0.35, pitch:0.16, dist:17, ta:[0,1.6,0]};
 const mk=(t,x,z,o={})=>Object.assign({t,m:DEFMAT[t],x,z,size:1,stretch:1,lift:0,rot:0,tilt:0,seed:Math.round(Math.random()*900)/100},o);
 function defaultScene(){
@@ -567,20 +579,26 @@ function upload(w,h){
 const DPR=Math.min(window.devicePixelRatio||1,2);
 let job=null, gen=0, rendered=false;
 const ring=$('#ring circle'), rbtn=$('#rbtn'), saveBtn=$('#saveBtn');
-function vw(){return [view.clientWidth,view.clientHeight];}
+const stage=$('#stage');
+function vw(){return [stage.clientWidth,stage.clientHeight];}
+// 1:1 frame = the largest centred square that fits; otherwise the stage fills the view
+function layoutStage(){ const w=view.clientWidth,h=view.clientHeight;
+  if(W.square){const q=Math.max(2,Math.min(w,h));Object.assign(stage.style,{left:((w-q)/2)+'px',top:((h-q)/2)+'px',width:q+'px',height:q+'px'});}
+  else Object.assign(stage.style,{left:'0',top:'0',width:'100%',height:'100%'});
+  stage.classList.toggle('sq',!!W.square); const b=document.getElementById('sqBtn'); if(b) b.classList.toggle('on',!!W.square); }
 function sizeTo(scale){const [w,h]=vw();const W2=Math.max(2,Math.round(w*scale)),H2=Math.max(2,Math.round(h*scale));if(cv.width!==W2||cv.height!==H2){cv.width=W2;cv.height=H2;}}
 function fullDraw(scale){sizeTo(scale);gl.disable(gl.SCISSOR_TEST);gl.viewport(0,0,cv.width,cv.height);upload();gl.drawArrays(gl.TRIANGLES,0,3);
   under.width=cv.width;under.height=cv.height;uctx.drawImage(cv,0,0);}
 function setRing(f){ring.style.strokeDashoffset=207.3*(1-f);}
 function preview(){
-  const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
+  layoutStage(); const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
   wire.style.opacity=1; drawWires();
   if(/Rendering|complete/.test(lcdEl.textContent)) lcd('Tap Render to see it properly.');
   requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/9);
     requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/4.5); }); });
 }
 function render(){
-  const g=++gen; rbtn.classList.add('busy'); saveBtn.disabled=true; lcd('Rendering…'); setRing(0.02);
+  layoutStage(); const g=++gen; rbtn.classList.add('busy'); saveBtn.disabled=true; lcd('Rendering…'); setRing(0.02);
   requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/3); setRing(.08);
     requestAnimationFrame(()=>{ if(g!==gen) return;
       sizeTo(DPR); gl.viewport(0,0,cv.width,cv.height); gl.disable(gl.SCISSOR_TEST); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -817,6 +835,7 @@ function loadState(p){
   W.calm=p.calm??0; W.rays=p.rays??(s.rays||0); W.flare=p.flare??(s.flare||0);
   W.clouds=p.clouds??s.clouds; W.hz=p.hz??s.hz; W.fog=p.fog??s.fog; W.elev=p.elev??s.elev; W.az=cam.yaw+Math.PI+p.az;
   if(p.retro!=null) W.retro=p.retro;
+  if(p.square!=null) W.square=p.square;
 }
 // ---------- thumbnails: drawn into an offscreen framebuffer so the picture on screen is never disturbed
 const TW=120,TH=80; let fbo=null; const tcv=document.createElement('canvas'); tcv.width=TW; tcv.height=TH; const tctx=tcv.getContext('2d');
@@ -846,7 +865,7 @@ const r2=v=>Math.round(v*100)/100, r3=v=>Math.round(v*1000)/1000;
 function encodeScene(){
   const d=[1,W.sky,W.ground,W.sea?1:0,r2(W.calm),r2(W.elev),r3(W.az-cam.yaw-Math.PI),r2(W.clouds),r2(W.hz),r2(W.fog),r2(W.rays),r2(W.flare),W.retro?1:0,
     [r3(cam.yaw),r3(cam.pitch),r2(cam.dist),...cam.ta.map(r2)],
-    objs.map(o=>[o.t,o.m,r2(o.x),r2(o.z),r3(o.size),r3(o.stretch),r2(o.lift),r3(o.rot),r3(o.tilt||0),r2(o.seed)])];
+    objs.map(o=>[o.t,o.m,r2(o.x),r2(o.z),r3(o.size),r3(o.stretch),r2(o.lift),r3(o.rot),r3(o.tilt||0),r2(o.seed)]),W.square?1:0];
   return btoa(JSON.stringify(d)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 // links and gallery entries come from strangers: every value is checked and clamped, anything odd is dropped
@@ -857,7 +876,7 @@ function decodeScene(str){
     if(!Array.isArray(d)||d[0]!==1||!Array.isArray(d[13])||!Array.isArray(d[14])) return null;
     const N=(v,lo,hi,df)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,v)):df, I=(v,lo,hi,df)=>Math.round(N(v,lo,hi,df)), c=d[13];
     return {sky:I(d[1],0,SKIES.length-1,0),ground:I(d[2],0,GROUNDS.length-1,0),sea:d[3]===1,calm:N(d[4],0,1,0),elev:N(d[5],1,90,30),az:N(d[6],-50,50,0),
-      clouds:N(d[7],0,1,.5),hz:N(d[8],0,1,.3),fog:N(d[9],0,1,.1),rays:N(d[10],0,1,0),flare:N(d[11],0,1,0),retro:d[12]!==0,
+      clouds:N(d[7],0,1,.5),hz:N(d[8],0,1,.3),fog:N(d[9],0,1,.1),rays:N(d[10],0,1,0),flare:N(d[11],0,1,0),retro:d[12]!==0,square:d.length>15?d[15]===1:null,
       cam:{yaw:N(c[0],-100,100,.35),pitch:N(c[1],-.05,1.35,.16),dist:N(c[2],4,140,17),ta:[N(c[3],-300,300,0),N(c[4],-50,50,1.6),N(c[5],-300,300,0)]},
       o:d[14].slice(0,10).filter(a=>Array.isArray(a)&&Number.isInteger(a[0])&&TNAME[a[0]]).map(a=>[a[0],N(a[2],-250,250,0),N(a[3],-250,250,0),
         {m:I(a[1],0,MATS.length-1,0),size:N(a[4],.2,4,1),stretch:N(a[5],.2,4,1),lift:N(a[6],0,12,0),rot:N(a[7],-100,100,0),tilt:N(a[8],0,1.6,0),seed:N(a[9],0,100,1)}])};
@@ -932,7 +951,7 @@ function groundAt(x,y,yy){const r=rayAt(x,y);if(Math.abs(r.rd[1])<1e-4)return nu
 function pick(x,y){const r=rayAt(x,y);let best=-1,bt=1e9;
   objs.forEach((o,i)=>{const g=geom(o);const rad=Math.hypot(...g.s)*(o.t>=7?.75:.85);const oc=sub(r.ro,g.p);const b=dot(oc,r.rd),c=dot(oc,oc)-rad*rad,h=b*b-c;if(h<0)return;const t=-b-Math.sqrt(h);if(t>0&&t<bt){bt=t;best=i;}});
   return best;}
-function local(e){const b=view.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];}
+function local(e){const b=stage.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];}
 view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);const p=local(e);pts.set(e.pointerId,p);
   if(pts.size===1){down={x:p[0],y:p[1],moved:false};dragHit=null;
     if(tab==='edit'&&sel>=0){const o=objs[sel];const [w,h]=vw();const sp=project(camera(),[o.x,0,o.z],w,h);dragHit=sp?{sx:sp[0],sy:sp[1],px:p[0],py:p[1]}:null;}}
@@ -949,10 +968,41 @@ const pup=e=>{const p=pts.get(e.pointerId);pts.delete(e.pointerId);if(pts.size<2
   if(pts.size===0)down=null;};
 view.addEventListener('pointerup',pup);view.addEventListener('pointercancel',pup);
 view.addEventListener('wheel',e=>{e.preventDefault();cam.dist=Math.min(140,Math.max(4,cam.dist*Math.exp(e.deltaY*0.001)));changed();},{passive:false});
-let rt=0; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rendered)render();else preview();},150);});
+let rt=0, lastWH='';
+new ResizeObserver(()=>{const k=view.clientWidth+'x'+view.clientHeight; if(k===lastWH) return; const first=!lastWH; lastWH=k; if(first) return;
+  layoutStage(); clearTimeout(rt); rt=setTimeout(()=>{if(flying) return; if(rendered||job)render();else preview();},150);}).observe(view);
+
+// ---------- frame + full screen buttons, keyboard shortcuts
+const prefs={get(k){try{return localStorage.getItem('dc97-'+k);}catch(e){return null;}},set(k,v){try{localStorage.setItem('dc97-'+k,v);}catch(e){}}};
+function setSquare(on){ W.square=on; prefs.set('square',on?'1':'0'); layoutStage(); lcd(on?'Square 1:1 frame: renders and saves come out square.':'Full frame.'); if(!flying){ if(rendered) render(); else preview(); } }
+let fsByApi=false;
+function setImmersive(on){
+  document.body.classList.toggle('imm',on); $('#fsBtn').classList.toggle('on',on);
+  if(on){ const el=document.documentElement; if(el.requestFullscreen&&!document.fullscreenElement){ el.requestFullscreen().then(()=>{fsByApi=true;}).catch(()=>{}); } }
+  else if(document.fullscreenElement&&document.exitFullscreen){ fsByApi=false; document.exitFullscreen().catch(()=>{}); }
+}
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement&&fsByApi){ fsByApi=false; document.body.classList.remove('imm'); $('#fsBtn').classList.remove('on'); } });
+$('#vbtns').addEventListener('pointerdown',e=>e.stopPropagation());
+$('#sqBtn').onclick=()=>setSquare(!W.square);
+$('#fsBtn').onclick=()=>setImmersive(!document.body.classList.contains('imm'));
+$('#rendBtn2').onclick=()=>rbtn.onclick();
+addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,textarea,select')) return; if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const k=e.key, o=objs[sel];
+  if(k==='r'||k==='R'){ rbtn.onclick(); }
+  else if(k==='f'||k==='F'){ setImmersive(!document.body.classList.contains('imm')); }
+  else if(k==='s'||k==='S'){ setSquare(!W.square); }
+  else if(k==='Escape'){ if(document.body.classList.contains('imm')) setImmersive(false); else if(sel>=0){ select(-1); lcd('Nothing selected.'); } else return; }
+  else if((k==='Delete'||k==='Backspace')&&o){ objs.splice(sel,1); select(-1); lcd('Deleted.'); changed(); }
+  else if(k.startsWith('Arrow')&&o){ const C=camera(),f=norm([C.ww[0],0,C.ww[2]]),r=[-f[2],0,f[0]],st=e.shiftKey?2:.5;
+    const dx=k==='ArrowRight'?1:k==='ArrowLeft'?-1:0, dz=k==='ArrowUp'?1:k==='ArrowDown'?-1:0;
+    o.x+=(r[0]*dx+f[0]*dz)*st; o.z+=(r[2]*dx+f[2]*dz)*st; changed(); }
+  else return;
+  e.preventDefault();
+});
 
 // ---------- start
-defaultScene(); try{makeThumbs();}catch(e){console.error(e);} const shared=loadFromHash(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':'Welcome to Dreamscape 97. Rendering…');
+defaultScene(); W.square=prefs.get('square')==='1'; try{makeThumbs();}catch(e){console.error(e);} const shared=loadFromHash(); layoutStage(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':'Welcome to Dreamscape 97. Rendering…');
 requestAnimationFrame(()=>{preview(); setTimeout(render,120);});
 })();
 </script>
