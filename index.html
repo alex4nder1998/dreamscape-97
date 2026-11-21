@@ -120,8 +120,14 @@
   #dial i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffe9a8 50%,#ffb020);box-shadow:0 0 8px 3px rgba(255,220,140,.8)}
   #dial span{position:absolute;left:0;right:0;top:-1px;text-align:center;font:9px 'Exo 2';color:rgba(255,255,255,.5)}
   /* overlay */
-  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);z-index:10;touch-action:auto}
-  #overlay[hidden]{display:none}
+  #overlay,#sharebox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);z-index:10;touch-action:auto}
+  #overlay[hidden],#sharebox[hidden]{display:none}
+  #sharebox{z-index:11}
+  #sharebox img{max-width:min(100%,640px);max-height:58vh;border-radius:4px;box-shadow:0 0 0 3px #555,0 10px 40px #000}
+  #sharebox p{margin:0;font:18px 'VT323',monospace;color:#9cf0a6;text-align:center;max-width:46ch}
+  #sharebox .btns{flex-wrap:wrap;justify-content:center}
+  #sharebox .mbtn{flex:none;padding:10px 18px}
+  #sharebox .mbtn:disabled{opacity:.45}
   #overlay img{max-width:100%;max-height:72vh;border-radius:4px;box-shadow:0 0 0 3px #555,0 10px 40px #000;-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto}
   #overlay p{margin:0;font:18px 'VT323',monospace;color:#9cf0a6;text-align:center}
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;font:18px 'VT323',monospace;color:#9cf0a6;background:#111;z-index:20}
@@ -163,6 +169,7 @@
     </div>
   </footer>
 </div>
+<div id="sharebox" hidden role="dialog" aria-label="Share your world"><img id="shpic" alt="The picture that will be shared" hidden><p id="shmsg">Making the picture…</p><div class="btns"><button class="mbtn" id="shGo" hidden>📤 Share…</button><button class="mbtn" id="shCopy" hidden>📋 Copy picture + link</button><button class="mbtn" id="shLink">🔗 Copy link only</button><button class="mbtn" id="shDl">⬇ Download picture</button><button class="mbtn" id="shClose">Close</button></div></div>
 <div id="overlay" hidden><img id="shot" alt="Your rendered scene"><video id="clip" controls loop playsinline muted hidden></video><div class="exsz" id="exsz"><button data-k="0" class="on">Screen<small>as shown</small></button><button data-k="1">Poster<small>2K · smooth</small></button><button data-k="2">Print<small>4K · slow</small></button></div><p id="exmsg">Press and hold the picture (or right-click) to save it.</p><div class="btns" style="width:auto"><button class="mbtn" id="dlBtn" style="flex:none;padding:10px 18px">⬇ Download</button><button class="mbtn" id="shareBtn2" style="flex:none;padding:10px 22px">🔗 Share link</button><button class="mbtn" id="closeBtn" style="flex:none;padding:10px 30px">Close</button></div></div>
 <div id="err"></div>
 
@@ -1113,13 +1120,54 @@ function decodeScene(str){
   }catch(e){ return null; }
 }
 function shareURL(){ return location.href.split('#')[0]+'#s='+encodeScene(); }
-async function shareScene(){
-  const url=shareURL(); try{ history.replaceState(null,'',url); }catch(e){}
-  try{ if(navigator.share&&matchMedia('(pointer:coarse)').matches){ await navigator.share({title:'My Dreamscape 97 world',url}); lcd('Shared.'); return; } }
-  catch(e){ if(e&&e.name==='AbortError') return; }
-  try{ await navigator.clipboard.writeText(url); lcd('Link copied. Paste it anywhere.'); }
-  catch(e){ lcd('Copy the link from the address bar.'); }
+// Share: render the picture, then hand over picture + link together (share sheet on phones, clipboard on computers)
+let shJpg=null, shPng=null, shUrl=null, shLinkUrl='', shRun=0;
+const toBlob=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q));
+const shTitle=()=>(W.cover.album||W.cover.band||'My Dreamscape 97 world').trim();
+const shFile=()=>new File([shJpg],'dreamscape-97.jpg',{type:'image/jpeg'});
+const canClipImg=()=>!!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem);
+function shButtons(ready){
+  const coarse=matchMedia('(pointer:coarse)').matches; let files=false;
+  try{ files=!!(ready&&navigator.canShare&&navigator.canShare({files:[shFile()]})); }catch(e){}
+  $('#shGo').hidden=!(coarse&&(files||(!ready&&navigator.share))); $('#shGo').disabled=!ready;
+  $('#shCopy').hidden=coarse||!canClipImg(); $('#shCopy').disabled=!ready;
+  $('#shDl').hidden=coarse&&files; $('#shDl').disabled=!ready;
+  return {coarse,files};
 }
+async function shareScene(){
+  if(rec) return;
+  shLinkUrl=shareURL(); try{ history.replaceState(null,'',shLinkUrl); }catch(e){}
+  const my=++shRun, box=$('#sharebox'), msg=$('#shmsg'), pic=$('#shpic');
+  shJpg=shPng=null; pic.hidden=true; box.hidden=false; shButtons(false); msg.textContent='Making the picture… 0%';
+  try{
+    await coverFonts(); if(my!==shRun) return;
+    const big=await renderBig(1200,1,f=>{ if(my===shRun) msg.textContent='Making the picture… '+Math.round(f*100)+'%'; },()=>my!==shRun);
+    if(!big||my!==shRun) return; drawCover(big.getContext('2d'),big.width,big.height);
+    const [j,p]=await Promise.all([toBlob(big,'image/jpeg',.9),canClipImg()?toBlob(big,'image/png'):null]);
+    if(my!==shRun||!j) return; shJpg=j; shPng=p;
+    if(shUrl) URL.revokeObjectURL(shUrl); shUrl=URL.createObjectURL(j); pic.src=shUrl; pic.hidden=false;
+    const {coarse,files}=shButtons(true);
+    msg.textContent=coarse&&files?'Tap Share… to send this picture with the link.':coarse?'Download the picture and send it with the link.':canClipImg()?'Copy the picture and the link, then paste them into any chat.':'Download the picture, copy the link, and send both.';
+  }catch(e){ console.error(e); if(my===shRun) msg.textContent='Could not make the picture here. You can still copy the link.'; }
+}
+function closeShare(){ shRun++; $('#sharebox').hidden=true; }
+async function copyLink(){
+  try{ await navigator.clipboard.writeText(shLinkUrl); $('#shmsg').textContent='Link copied. Paste it anywhere.'; }
+  catch(e){ $('#shmsg').textContent='Copy the link from the address bar.'; }
+}
+$('#shGo').onclick=async()=>{ if(!shJpg) return; const t=shTitle();
+  try{ await navigator.share({files:[shFile()],title:t,text:t+' '+shLinkUrl}); $('#shmsg').textContent='Shared.'; }
+  catch(e){ if(e&&e.name==='AbortError') return;
+    try{ await navigator.share({title:t,url:shLinkUrl}); $('#shmsg').textContent='Shared the link (this app would not take the picture).'; }
+    catch(e2){ if(!(e2&&e2.name==='AbortError')) copyLink(); } } };
+$('#shCopy').onclick=async()=>{ if(!shPng) return; const m=$('#shmsg');
+  try{ await navigator.clipboard.write([new ClipboardItem({'image/png':shPng,'text/plain':new Blob([shLinkUrl],{type:'text/plain'})})]);
+    m.textContent='Copied. Paste into your chat. If only the picture shows up, press Copy link only and paste again.'; }
+  catch(e){ try{ await navigator.clipboard.write([new ClipboardItem({'image/png':shPng})]); m.textContent='Picture copied. Paste it, then press Copy link only for the link.'; }
+    catch(e2){ m.textContent='This browser would not copy the picture. Use Download picture instead.'; } } };
+$('#shLink').onclick=copyLink;
+$('#shDl').onclick=()=>{ if(!shUrl) return; const a=document.createElement('a'); a.href=shUrl; a.download='dreamscape-97.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+$('#shClose').onclick=closeShare;
 function submitScene(){
   const q=new URLSearchParams({template:'gallery.yml',title:'Gallery: ',link:shareURL()});
   window.open('https://github.com/'+REPO+'/issues/new?'+q,'_blank','noopener');
@@ -1222,6 +1270,7 @@ $('#autoBtn').onclick=()=>setAuto(!autoR);
 $('#recBtn').onclick=()=>{ if(rec) stopRec(); else startRec(); }; $('#redoBtn').onclick=redo;
 addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,select')) return;
+  if(!$('#sharebox').hidden){ if(e.key==='Escape'){ closeShare(); e.preventDefault(); } return; }
   if((e.metaKey||e.ctrlKey)&&!e.altKey&&$('#overlay').hidden){ const z=e.key.toLowerCase();
     if(z==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; } if(z==='y'){ e.preventDefault(); redo(); return; } }
   if(e.metaKey||e.ctrlKey||e.altKey) return;
