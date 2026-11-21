@@ -85,6 +85,16 @@
   body.imm #top,body.imm #deck{display:none}
   body.imm #view{margin:0;border-radius:0;box-shadow:none}
   body.imm #rendBtn2{display:block}
+  body.view #top,body.view #deck,body.view #vbtns{display:none}
+  body.view #view{margin:0;border-radius:0;box-shadow:none}
+  #viewbar{display:none;position:absolute;left:0;right:0;bottom:0;z-index:4;padding:12px max(14px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom) + 14px);
+    background:#000;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  body.view #viewbar{display:flex}
+  #vtitle{font:italic 600 15px 'Exo 2',sans-serif;color:#fff;text-shadow:0 1px 3px #000}
+  #vmsg{font:16px 'VT323',monospace;color:#9cf0a6;text-shadow:0 0 6px rgba(120,255,140,.55);min-height:1em}
+  #viewbar .btns{flex-wrap:wrap;justify-content:center}
+  #viewbar .mbtn{flex:none;padding:10px 18px}
+  #viewbar .mbtn.go{background:linear-gradient(180deg,#ffd98a,#c0801a);color:#1a1000;text-shadow:none}
   #view canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
   #wire{image-rendering:auto !important;transition:opacity .4s}
   /* deck */
@@ -154,7 +164,7 @@
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="recBtn" title="Record a fly-through clip (V)">● Clip</button><button class="vb" id="autoBtn" title="Render by itself when you stop editing (A)">Auto</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="recBtn" title="Record a fly-through clip (V)">● Clip</button><button class="vb" id="autoBtn" title="Render by itself when you stop editing (A)">Auto</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div><div id="viewbar"><div id="vtitle"></div><div id="vmsg"></div><div class="btns"><button class="mbtn go" id="vEdit">✎ Edit a copy</button><button class="mbtn" id="vShare">🔗 Share</button><button class="mbtn" id="vOwn">My own world</button></div></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -655,9 +665,10 @@ const ring=$('#ring circle'), rbtn=$('#rbtn'), saveBtn=$('#saveBtn');
 const stage=$('#stage');
 function vw(){return [stage.clientWidth,stage.clientHeight];}
 // 1:1 frame = the largest centred square that fits; otherwise the stage fills the view
-function layoutStage(){ const w=view.clientWidth,h=view.clientHeight;
-  if(W.square){const q=Math.max(2,Math.min(w,h));Object.assign(stage.style,{left:((w-q)/2)+'px',top:((h-q)/2)+'px',width:q+'px',height:q+'px'});}
-  else Object.assign(stage.style,{left:'0',top:'0',width:'100%',height:'100%'});
+function layoutStage(){ const vb=$('#viewbar'), bh=viewMode?vb.offsetHeight:0, w=view.clientWidth,h=view.clientHeight-bh;   // view mode: the picture sits above its buttons
+  vb.style.bottom='0';
+  if(W.square){const q=Math.max(2,Math.min(w,h)), gap=(h-q)/2; Object.assign(stage.style,{left:((w-q)/2)+'px',top:gap+'px',width:q+'px',height:q+'px'}); if(viewMode) vb.style.bottom=gap+'px';}
+  else Object.assign(stage.style,{left:'0',top:'0',width:'100%',height:Math.max(2,h)+'px'});
   stage.classList.toggle('sq',!!W.square); const b=document.getElementById('sqBtn'); if(b) b.classList.toggle('on',!!W.square); if(typeof drawCoverView==='function') drawCoverView(); }
 function sizeTo(scale){const [w,h]=vw();const W2=Math.max(2,Math.round(w*scale)),H2=Math.max(2,Math.round(h*scale));if(cv.width!==W2||cv.height!==H2){cv.width=W2;cv.height=H2;}}
 function fullDraw(scale){sizeTo(scale);gl.disable(gl.SCISSOR_TEST);gl.viewport(0,0,cv.width,cv.height);upload();gl.drawArrays(gl.TRIANGLES,0,3);
@@ -780,11 +791,11 @@ function strip(){
   upload(); gl.drawArrays(gl.TRIANGLES,0,3); job.y=y0; setRing(.08+.92*(1-y0/cv.height));
   if(y0>0){requestAnimationFrame(strip);return;}
   job=null; gl.disable(gl.SCISSOR_TEST); rendered=true; rbtn.classList.remove('busy'); setRing(0);
-  saveBtn.disabled=false; saveBtn.classList.add('ready'); lcd('Render complete. Tap Save to keep it.');
+  saveBtn.disabled=false; saveBtn.classList.add('ready'); lcd(doneMsg||'Render complete. Tap Save to keep it.'); doneMsg='';
 }
 // ---------- history (undo/redo) + autosave: a snapshot is the share-link encoding of the world
-const hist=[]; let hIdx=-1, hT=0, restoring=false;
-function snapSoon(){ if(restoring) return; clearTimeout(hT); hT=setTimeout(snapNow,450); }
+const hist=[]; let hIdx=-1, hT=0, restoring=false, viewMode=false, doneMsg='';
+function snapSoon(){ if(restoring||viewMode) return; clearTimeout(hT); hT=setTimeout(snapNow,450); }
 function snapNow(){ let s; try{ s=encodeScene(); }catch(e){ return; }
   if(hist[hIdx]!==s){ hist.splice(hIdx+1); hist.push(s); if(hist.length>80) hist.shift(); hIdx=hist.length-1; }
   try{ localStorage.setItem('dc97-last',s); }catch(e){} updHist(); }
@@ -871,7 +882,7 @@ function drawWires(){
 }
 
 // ---------- UI helpers
-const lcdEl=$('#lcd'); function lcd(t){lcdEl.textContent=t;}
+const lcdEl=$('#lcd'); function lcd(t){lcdEl.textContent=t; const v=document.getElementById('vmsg'); if(v) v.textContent=/^Render complete/.test(t)?'':t;}
 const SV=i=>'<svg viewBox="0 0 40 40">'+i+'</svg>';
 const ICON={
  7:SV('<polygon points="3,26 20,35 37,26 20,17" fill="url(#gD)"/><path d="M5,26 L12,15 L16,19 L22,7 L28,17 L31,14 L36,26 L20,34 Z" fill="url(#gH)"/><path d="M22,7 L25.5,12.5 L23.5,12 L21.5,14 L19.6,11.8 Z" fill="#fff"/>'),
@@ -1212,7 +1223,27 @@ function loadFromHash(){
   const p=decodeScene(m[1]); if(!p){ lcd('That link looks broken, so here is the default world.'); return false; }
   if(flying) stopFly(); loadState(p); curScene=-1; curComm=-1; sel=-1; return true;
 }
-addEventListener('hashchange',()=>{ if(loadFromHash()){ buildStrip(); buildCtx(); updCount(); preview(); lcd('Shared world loaded. Rendering…'); setTimeout(render,120); } });
+addEventListener('hashchange',()=>{ if(loadFromHash()){ buildStrip(); buildCtx(); updCount(); setView(true); preview(); lcd('Rendering…'); setTimeout(render,120); } });
+// view mode: a shared link opens as a picture; "Edit a copy" branches it into your own world (the link itself never changes)
+function setView(on){
+  viewMode=on; document.body.classList.toggle('view',on);
+  if(on){ const c=W.cover, t=[c.album,c.band].filter(Boolean).join(' · ');
+    $('#vtitle').textContent=c.st>0&&t?'':(t||'A world made in Dreamscape 97');   // cover lettering already shows the names
+    let mine=null; try{ mine=localStorage.getItem('dc97-last'); }catch(e){} $('#vOwn').textContent=mine?'↩ Back to my world':'Make my own'; }
+  layoutStage();
+}
+function dropHash(){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+function editCopy(){
+  if(!viewMode) return; setView(false); dropHash(); render();
+  hist.length=0; hIdx=-1; snapNow(); setTab('create'); doneMsg='Your copy. Change anything: the original link stays as it was.'; lcd(doneMsg);
+}
+function ownWorld(){
+  if(!viewMode) return; let p=null; try{ const s=localStorage.getItem('dc97-last'); p=s&&decodeScene(s); }catch(e){}
+  if(flying) stopFly(); if(p) loadState(p); else defaultScene(); curScene=-1; curComm=-1; sel=-1;
+  setView(false); dropHash(); hist.length=0; hIdx=-1; snapNow(); buildStrip(); buildCtx(); updCount(); drawCoverView(true); setTab('create'); preview();
+  lcd(p?'Back to your own world.':'A fresh world. Add some shapes.');
+}
+$('#vEdit').onclick=editCopy; $('#vOwn').onclick=ownWorld; $('#vShare').onclick=()=>shareScene();
 
 // ---------- sun dial (relative to the camera: top = sun in front of you)
 let dialEl=null;
@@ -1242,7 +1273,7 @@ function pick(x,y){const r=rayAt(x,y);let best=-1,bt=1e9;
   objs.forEach((o,i)=>{const g=geom(o);const rad=Math.hypot(...g.s)*(isLand(o.t)?.75:.85);const oc=sub(r.ro,g.p);const b=dot(oc,r.rd),c=dot(oc,oc)-rad*rad,h=b*b-c;if(h<0)return;const t=-b-Math.sqrt(h);if(t>0&&t<bt){bt=t;best=i;}});
   return best;}
 function local(e){const b=stage.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];}
-view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);const p=local(e);pts.set(e.pointerId,p);
+view.addEventListener('pointerdown',e=>{if(viewMode)return;view.setPointerCapture(e.pointerId);const p=local(e);pts.set(e.pointerId,p);
   if(pts.size===1){down={x:p[0],y:p[1],moved:false};dragHit=null;
     if(tab==='edit'&&sel>=0){const o=objs[sel];const [w,h]=vw();const sp=project(camera(),[o.x,0,o.z],w,h);dragHit=sp?{sx:sp[0],sy:sp[1],px:p[0],py:p[1]}:null;}}
   else if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),dist:cam.dist};down=null;}});
@@ -1257,7 +1288,7 @@ const pup=e=>{const p=pts.get(e.pointerId);pts.delete(e.pointerId);if(pts.size<2
     else if(sel>=0){select(-1);if(tab==='edit')lcd('Nothing selected.');}}
   if(pts.size===0){down=null; if(autoR&&!rendered&&!job&&!flying){ clearTimeout(arT); const g=gen; arT=setTimeout(()=>{ if(g===gen&&!pts.size&&!flying&&$('#overlay').hidden) render(); },650);} }};
 view.addEventListener('pointerup',pup);view.addEventListener('pointercancel',pup);
-view.addEventListener('wheel',e=>{e.preventDefault();cam.dist=Math.min(140,Math.max(4,cam.dist*Math.exp(e.deltaY*0.001)));changed();},{passive:false});
+view.addEventListener('wheel',e=>{if(viewMode)return;e.preventDefault();cam.dist=Math.min(140,Math.max(4,cam.dist*Math.exp(e.deltaY*0.001)));changed();},{passive:false});
 let rt=0, lastWH='';
 new ResizeObserver(()=>{const k=view.clientWidth+'x'+view.clientHeight; if(k===lastWH) return; const first=!lastWH; lastWH=k; if(first) return;
   layoutStage(); clearTimeout(rt); rt=setTimeout(()=>{if(flying) return; if(rendered||job)render();else preview();},150);}).observe(view);
@@ -1282,6 +1313,7 @@ $('#autoBtn').onclick=()=>setAuto(!autoR);
 $('#recBtn').onclick=()=>{ if(rec) stopRec(); else startRec(); }; $('#redoBtn').onclick=redo;
 addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,select')) return;
+  if(viewMode&&$('#sharebox').hidden){ if(e.key==='e'||e.key==='E'){ editCopy(); e.preventDefault(); } return; }
   if(!$('#sharebox').hidden){ if(e.key==='Escape'){ closeShare(); e.preventDefault(); } return; }
   if((e.metaKey||e.ctrlKey)&&!e.altKey&&$('#overlay').hidden){ const z=e.key.toLowerCase();
     if(z==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; } if(z==='y'){ e.preventDefault(); redo(); return; } }
@@ -1306,7 +1338,7 @@ addEventListener('keydown',e=>{
 // ---------- start
 defaultScene(); W.square=prefs.get('square')==='1'; try{makeThumbs();}catch(e){console.error(e);} const shared=loadFromHash(); let back=false;
 if(!shared){ let last=null; try{ last=localStorage.getItem('dc97-last'); }catch(e){} const p=last&&decodeScene(last); if(p){ loadState(p); back=true; } }
-layoutStage(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':back?'Welcome back. Your last world is restored (Clear or a scene starts fresh).':'Welcome to Dreamscape 97. Rendering…');
+if(shared) setView(true); layoutStage(); setTab('create'); lcd(shared?'Rendering…':back?'Welcome back. Your last world is restored (Clear or a scene starts fresh).':'Welcome to Dreamscape 97. Rendering…');
 requestAnimationFrame(()=>{preview(); setTimeout(render,120);});
 })();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));

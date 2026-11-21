@@ -51,7 +51,7 @@ Works on desktop and phone, nothing to install. **[Open it live →](https://ale
 
 ## Share your world
 
-- **🔗 Share** (Scenes tab, or after saving a render) makes a picture of your world and sends it together with a link that contains the whole world. On a phone it opens the share sheet with both attached; on a computer **Copy picture + link** puts both on the clipboard. Chats show your actual scene, and anyone who opens the link gets the exact world and can remix it.
+- **🔗 Share** (Scenes tab, or after saving a render) makes a picture of your world and sends it together with a link that contains the whole world. On a phone it opens the share sheet with both attached; on a computer **Copy picture + link** puts both on the clipboard. Chats show your actual scene. A shared link opens **view only**, as a full-screen picture; **✎ Edit a copy** turns it into your own world to change, and the original link stays as it was.
 - **⬆ Submit** opens a ready-filled [gallery issue](https://github.com/alex4nder1998/dreamscape-97/issues/new?template=gallery.yml) (needs a GitHub account). Name your world in the title and press Create.
 - Worlds that get the `featured` label appear in the app's Scenes tab for everyone, after the line, credited to the person who submitted them.
 

@@ -61,7 +61,7 @@ try {
   await page.click('[data-tab=create]');
   for (const t of ['Arch', 'Stairs', 'Twist', 'Crystals', 'Column']) await page.locator('#strip .ic', { hasText: t }).first().click().catch(() => {});
   await page.click('[data-tab=scenes]');
-  await page.click('text=🔗 Share');
+  await page.click('#ctx >> text=🔗 Share');
   const url = page.url();
   check(/#s=[A-Za-z0-9_-]+$/.test(url), 'Share puts the world in the link');
   const enc = url.split('#s=')[1];
@@ -74,6 +74,9 @@ try {
   await page.evaluate(h => { location.hash = 's=' + h; }, enc); await rendered(page);
   const count = await page.evaluate(() => { document.querySelector('[data-tab=create]').click(); return document.querySelector('#count').textContent; });
   check(/Objects: [1-9]/.test(count), 'shared link restores the world and renders (' + count.split('·')[0].trim() + ')');
+  check(await page.evaluate(() => document.body.classList.contains('view')), 'a shared link opens in view-only mode');
+  await page.click('#vEdit');
+  check(await page.evaluate(() => !document.body.classList.contains('view') && !location.hash), 'Edit a copy turns it into your own world');
 
   await page.evaluate(h => { location.hash = 's=' + h; },  Buffer.from(JSON.stringify([1, 999, -5, 1, 9, 1e9, 'x', null, 0, 0, 0, 0, 0, [1e9, 1e9, 1e9, 1e9, 1e9, 1e9], Array(40).fill([99, 1e9]), 7, [9, '<img src=x onerror=alert(1)>', 1]])).toString('base64url'));
   await page.waitForTimeout(1500);
