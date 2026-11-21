@@ -1,0 +1,20 @@
+name: Smoke test
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright (test only, the app itself has no dependencies)
+        run: npm i --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
+      - name: Run smoke test
+        run: node tests/smoke.mjs
