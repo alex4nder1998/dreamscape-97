@@ -227,6 +227,8 @@ float sdPyramid(vec3 p, float h){
   float d2=min(q.y,-q.x*m2-q.y*0.5)>0.0?0.0:min(a,b);
   return sqrt((d2+q.z*q.z)/m2)*sign(max(q.z,-p.y));
 }
+float tomb(vec2 p, float w, float yb, float yc){ return min(max(abs(p.x)-w, max(yb-p.y, p.y-yc)), length(p-vec2(0.0,yc))-w); }
+float crystal(vec3 p, float r, float h){ float hx=max(abs(p.x)*0.866+abs(p.z)*0.5,abs(p.z)); return max(hx-r, max(p.y+hx*1.6-h, -p.y))*0.7; }
 vec3 toLocal(int i, vec3 p){ vec3 q=p-uA[i].yzw; q.xz=rot2(-uB[i].w)*q.xz; q.yz=rot2(-uC[i].z)*q.yz; return q; }
 float objSDF(int i, vec3 p, int oct){
   vec3 q=toLocal(i,p); vec3 s=uB[i].xyz; int t=int(uA[i].x+0.5);
@@ -236,6 +238,17 @@ float objSDF(int i, vec3 p, int oct){
   if(t==4){ return sdCappedCone(q,s.y,s.x,0.0); }
   if(t==5){ float k=2.0*s.x; return sdPyramid(vec3(q.x,q.y+s.y,q.z)/k, s.y/s.x)*k; }
   if(t==6){ float R=max(s.x-s.y,0.05); return length(vec2(length(q.xz)-R,q.y))-s.y; }
+  if(t==9){ float yc=s.y-s.x;   // arch: a slab with a round-topped opening
+    float d2=max(tomb(q.xy,s.x,-s.y,yc), -tomb(q.xy,s.x*0.58,-s.y-1.0,yc)); return max(d2, abs(q.z)-s.z); }
+  if(t==10){ float d=1e5; for(int k=0;k<5;k++){ float fk=float(k), w=2.0*s.x/5.0, hh=2.0*s.y*(fk+1.0)/5.0;   // stairs: five solid steps
+      d=min(d, sdBox(q-vec3(-s.x+w*(fk+0.5),-s.y+hh*0.5,0.0), vec3(w*0.5,hh*0.5,s.z))); } return d; }
+  if(t==11){ vec3 r=q; r.xz=rot2(q.y*1.6/s.y)*r.xz; float rr=0.05*s.x; return (sdBox(r,vec3(s.x*0.62,s.y,s.x*0.62)-rr)-rr)*0.55; }   // twisted pillar
+  if(t==12){ vec3 b=q+vec3(0.0,s.y,0.0); float d=1e5, sd=uC[i].y;   // crystal cluster, the seed sets the angles
+    for(int k=0;k<5;k++){ float fk=float(k), a=sd*2.0+fk*2.4, tl=k==0?0.0:0.42+0.1*fk; vec3 p=b; p.xz=rot2(a)*p.xz; p.xy=rot2(tl)*p.xy;
+      d=min(d, crystal(p, s.x*(k==0?0.34:0.24), s.y*2.0*(k==0?1.0:0.78-0.1*fk))); } return d; }
+  if(t==13){ float c=0.1*s.y, ang=atan(q.z,q.x);   // fluted column with a base and a capital
+    float sh=max(length(q.xz)-s.x*(0.62+0.03*cos(ang*16.0)), abs(q.y)-s.y)*0.85;
+    float bs=sdBox(q-vec3(0.0,-s.y+c,0.0),vec3(s.x,c,s.x)), cp=sdBox(q-vec3(0.0,s.y-c,0.0),vec3(s.x,c,s.x)); return min(sh,min(bs,cp)); }
   if(t==7){
     float b=sdBox(q,s); if(b>0.4) return b;
     float h=terrainH(q.xz/s.xz, uC[i].y, oct);
@@ -523,9 +536,10 @@ const err=$('#err'); const fail=m=>{err.style.display='flex';err.textContent=m;}
 
 // ---------- data
 const T={sphere:1,cube:2,cylinder:3,cone:4,pyramid:5,torus:6,terrain:7,lattice:8};
-const TNAME={1:'Sphere',2:'Cube',3:'Cylinder',4:'Cone',5:'Pyramid',6:'Torus',7:'Terrain',8:'Lattice'};
-const BASE={1:[1.3,1.3,1.3],2:[1.1,1.1,1.1],3:[0.8,1.5,0.8],4:[1.1,1.8,1.1],5:[1.3,1.3,1.3],6:[1.3,0.36,1.3],7:[10,3,10],8:[3.4,2.8,3.4]};
-const DEFMAT={1:0,2:7,3:5,4:4,5:1,6:2,7:8,8:6};
+const TNAME={1:'Sphere',2:'Cube',3:'Cylinder',4:'Cone',5:'Pyramid',6:'Torus',7:'Terrain',8:'Lattice',9:'Arch',10:'Stairs',11:'Twist',12:'Crystals',13:'Column'};
+const isLand=t=>t===7||t===8;
+const BASE={1:[1.3,1.3,1.3],2:[1.1,1.1,1.1],3:[0.8,1.5,0.8],4:[1.1,1.8,1.1],5:[1.3,1.3,1.3],6:[1.3,0.36,1.3],7:[10,3,10],8:[3.4,2.8,3.4],9:[1.6,1.9,0.4],10:[1.6,1.1,1.1],11:[0.75,2.0,0.75],12:[1.5,1.9,1.5],13:[0.75,2.4,0.75]};
+const DEFMAT={1:0,2:7,3:5,4:4,5:1,6:2,7:8,8:6,9:5,10:9,11:2,12:11,13:5};
 const MATS=[
  {n:'Chrome',css:'radial-gradient(circle at 35% 30%,#fff 0,#e8eef3 9%,#8a9aa8 32%,#26303a 54%,#c9d3dc 76%,#4a5560 100%)'},
  {n:'Glass',css:'radial-gradient(circle at 35% 30%,#fff 0,rgba(255,255,255,.85) 7%,rgba(170,220,235,.3) 32%,rgba(40,90,110,.55) 74%,rgba(220,250,255,.95) 96%)'},
@@ -596,7 +610,7 @@ function camera(){
 function sunDir(){const e=W.elev*Math.PI/180,a=W.az;return [Math.cos(e)*Math.sin(a),Math.sin(e),Math.cos(e)*Math.cos(a)];}
 // is the sun above the horizon and not hidden behind an object? (rough: bounding spheres)
 function sunVisible(C){ const d=sunDir(); if(d[1]<0.01) return 0;
-  for(const o of objs){const g=geom(o);const rad=Math.hypot(...g.s)*(o.t>=7?.45:.75);const oc=sub(C.ro,g.p);const b=dot(oc,d),c=dot(oc,oc)-rad*rad;if(b<0&&b*b-c>0) return 0;}
+  for(const o of objs){const g=geom(o);const rad=Math.hypot(...g.s)*(isLand(o.t)?.45:.75);const oc=sub(C.ro,g.p);const b=dot(oc,d),c=dot(oc,oc)-rad*rad;if(b<0&&b*b-c>0) return 0;}
   return 1; }
 function upload(w,h,off,pix){
   const C=camera(), S=SKIES[W.sky];
@@ -828,6 +842,11 @@ const ICON={
  4:SV('<path d="M20,4 L32,29 A12,5 0 0 1 8,29 Z" fill="url(#gH)"/>'),
  5:SV('<polygon points="20,5 6,28 20,34" fill="#d0d0d0"/><polygon points="20,5 20,34 34,28" fill="#636363"/>'),
  6:SV('<ellipse cx="20" cy="21" rx="13" ry="8" fill="none" stroke="url(#gH)" stroke-width="6.5"/><ellipse cx="20" cy="18.6" rx="13" ry="7.4" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.1"/>'),
+ 9:SV('<path d="M7,35 V16 A13,13 0 0 1 33,16 V35 H26 V17 A6,6 0 0 0 14,17 V35 Z" fill="url(#gH)"/>'),
+ 10:SV('<path d="M4,34 V28 H11 V22 H18 V16 H25 V10 H32 V34 Z" fill="url(#gH)"/><path d="M4,28 H11 M11,22 H18 M18,16 H25 M25,10 H32" stroke="#fff" stroke-width="1.2"/>'),
+ 11:SV('<path d="M14,5 H26 L22,13 L26,21 L22,29 L26,35 H14 L18,29 L14,21 L18,13 Z" fill="url(#gH)"/><path d="M18,13 L22,13 M18,21 H22 M18,29 H22" stroke="#333" stroke-width="1"/>'),
+ 12:SV('<g fill="url(#gH)" stroke="#fff" stroke-width=".7"><path d="M17,34 L17,12 L20,4 L23,12 L23,34 Z"/><path d="M15,34 L9,18 L9,13 L13,16 L19,32 Z"/><path d="M25,34 L31,20 L33,16 L33,22 L27,35 Z"/></g>'),
+ 13:SV('<rect x="9" y="4" width="22" height="4" fill="#eee"/><rect x="9" y="32" width="22" height="4" fill="#bbb"/><rect x="13" y="8" width="14" height="24" fill="url(#gH)"/><path d="M16,9 V31 M20,9 V31 M24,9 V31" stroke="rgba(0,0,0,.3)" stroke-width="1"/>'),
  sea:SV('<g fill="none" stroke-linecap="round" stroke-width="3"><path d="M4,15 q4,-4 8,0 t8,0 t8,0 t8,0" stroke="#bfe8ff"/><path d="M4,22 q4,-4 8,0 t8,0 t8,0 t8,0" stroke="#6fb8e8"/><path d="M4,29 q4,-4 8,0 t8,0 t8,0 t8,0" stroke="#2f7ab8"/></g>'),
  globe:SV('<circle cx="20" cy="20" r="13" fill="url(#gS)"/><g fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.2"><ellipse cx="20" cy="20" rx="6" ry="13"/><path d="M7,20 H33 M9,13 H31 M9,27 H31"/></g>'),
  calm:SV('<rect x="4" y="12" width="32" height="18" rx="2" fill="#2f6aa0"/><rect x="4" y="12" width="32" height="7" fill="#9ccbf2"/><path d="M8,24 H32 M12,27 H28" stroke="#cfe8ff" stroke-width="1.2"/>'),
@@ -845,7 +864,7 @@ const strip_=$('#strip'), ctx=$('#ctx');
 function buildStrip(){
   strip_.innerHTML='';
   if(tab==='create'){
-    [7,8,1,2,3,4,5,6].forEach(t=>strip_.appendChild(ic(ICON[t],TNAME[t],false,()=>addObj(t))));
+    [7,8,1,2,3,4,5,6,9,10,11,12,13].forEach(t=>strip_.appendChild(ic(ICON[t],TNAME[t],false,()=>addObj(t))));
     strip_.appendChild(sep());
     GROUNDS.forEach((g,i)=>strip_.appendChild(ic(SV('<polygon points="20,9 37,19 20,29 3,19" fill="'+g.fill+'"/><polygon points="3,19 20,29 20,32 3,22" fill="#222"/><polygon points="20,29 37,19 37,22 20,32" fill="#111"/>'),g.n,!W.sea&&W.ground===i,()=>{W.ground=i;W.sea=false;buildStrip();lcd(g.n+' ground.');changed();})));
     strip_.appendChild(ic(ICON.sea,'Waves',W.sea&&!W.calm,()=>{const on=!(W.sea&&!W.calm);W.sea=on;W.calm=0;buildStrip();lcd(on?'Wavy water.':'Water plane off.');changed();}));
@@ -858,7 +877,7 @@ function buildStrip(){
       for(let k=1;k<=4&&objs.length<10;k++){objs.push(Object.assign({},o,{x:o.x+f[0]*sp*k,z:o.z+f[2]*sp*k}));n++;}lcd(n?'Made a row of '+(n+1)+'.':'That is the limit: 10 objects.');updCount();changed();},!o));
     strip_.appendChild(ic(ICON.dup,'Copy',false,()=>{if(!o)return;if(objs.length>=10){lcd('That is the limit: 10 objects.');return;}const c=Object.assign({},o,{x:o.x+2.5*o.size,z:o.z+1});objs.push(c);select(objs.length-1);lcd('Copied.');changed();},!o));
     strip_.appendChild(ic(ICON.land,'Land',false,()=>{if(!o)return;o.lift=0;syncCtx();lcd('Dropped to the ground.');changed();},!o));
-    strip_.appendChild(ic(ICON.shape,'Reshape',false,()=>{if(!o)return;o.seed=Math.round(Math.random()*900)/100;lcd('New shape.');changed();},!o||o.t<7));
+    strip_.appendChild(ic(ICON.shape,'Reshape',false,()=>{if(!o)return;o.seed=Math.round(Math.random()*900)/100;lcd('New shape.');changed();},!o||!(isLand(o.t)||o.t===12)));
     strip_.appendChild(ic(ICON.del,'Delete',false,()=>{if(!o)return;objs.splice(sel,1);select(-1);lcd('Deleted.');changed();},!o));
   } else if(tab==='scenes'){
     SCENES.forEach((p,i)=>{const b=ic('<img class="shot" alt="" src="'+(p.img||'')+'">',p.n,curScene===i,()=>loadScene(i));b.classList.add('wide');strip_.appendChild(b);});
@@ -948,7 +967,7 @@ function surprise(){
   objs=[]; const nt=1+Math.floor(Math.random()*3);
   for(let i=0;i<nt;i++){const a=R(-1.2,1.2)+Math.PI;objs.push(mk(7,Math.sin(cam.yaw+a)*R(22,40),Math.cos(cam.yaw+a)*R(22,40),{size:R(.8,1.8),stretch:R(.6,1.6),rot:R(0,6)}));}
   const ns=2+Math.floor(Math.random()*4);
-  for(let i=0;i<ns;i++){const t=pick([1,1,2,3,4,5,6,8]);objs.push(mk(t,R(-5,5),R(-5,5),{m:pick([0,0,1,2,3,4,5,7,9,10,11]),tilt:t===6&&Math.random()<.5?Math.PI/2:0,size:R(.6,1.5),stretch:R(.7,1.6),rot:R(0,6),lift:Math.random()<.3?R(.5,3):0}));}
+  for(let i=0;i<ns;i++){const t=pick([1,1,2,3,4,5,6,8,9,11,12,13]);objs.push(mk(t,R(-5,5),R(-5,5),{m:pick([0,0,1,2,3,4,5,7,9,10,11]),tilt:t===6&&Math.random()<.5?Math.PI/2:0,size:R(.6,1.5),stretch:R(.7,1.6),rot:R(0,6),lift:Math.random()<.3?R(.5,3):0}));}
   W.sea=Math.random()<.4; W.calm=Math.random()<.5?1:0; W.ground=Math.floor(Math.random()*GROUNDS.length); applySky(Math.floor(Math.random()*SKIES.length),false);
   W.az=cam.yaw+Math.PI+R(-1.3,1.3); sel=-1; curScene=-1; buildStrip(); updCount(); lcd('A brand new world. Tap Render!'); changed();
 }
@@ -1139,7 +1158,7 @@ function rayAt(x,y){const [w,h]=vw();const C=camera();const ux=(2*x-w)/h,uy=(h-2
   return {ro:C.ro,rd:norm([ux*C.uu[0]+uy*C.vv[0]+1.7*C.ww[0],ux*C.uu[1]+uy*C.vv[1]+1.7*C.ww[1],ux*C.uu[2]+uy*C.vv[2]+1.7*C.ww[2]])};}
 function groundAt(x,y,yy){const r=rayAt(x,y);if(Math.abs(r.rd[1])<1e-4)return null;const t=(yy-r.ro[1])/r.rd[1];if(t<0||t>500)return null;return [r.ro[0]+r.rd[0]*t,r.ro[2]+r.rd[2]*t];}
 function pick(x,y){const r=rayAt(x,y);let best=-1,bt=1e9;
-  objs.forEach((o,i)=>{const g=geom(o);const rad=Math.hypot(...g.s)*(o.t>=7?.75:.85);const oc=sub(r.ro,g.p);const b=dot(oc,r.rd),c=dot(oc,oc)-rad*rad,h=b*b-c;if(h<0)return;const t=-b-Math.sqrt(h);if(t>0&&t<bt){bt=t;best=i;}});
+  objs.forEach((o,i)=>{const g=geom(o);const rad=Math.hypot(...g.s)*(isLand(o.t)?.75:.85);const oc=sub(r.ro,g.p);const b=dot(oc,r.rd),c=dot(oc,oc)-rad*rad,h=b*b-c;if(h<0)return;const t=-b-Math.sqrt(h);if(t>0&&t<bt){bt=t;best=i;}});
   return best;}
 function local(e){const b=stage.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];}
 view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);const p=local(e);pts.set(e.pointerId,p);

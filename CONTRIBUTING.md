@@ -29,7 +29,7 @@ There's no build step, no npm and no framework. Please keep it that way: a PR th
 
 ### Adding a preset scene
 
-Add an entry to `SCENES`. Each object is `[type, x, z, {size, stretch, lift, rot, tilt, m, seed}]`. Types are 1 sphere, 2 cube, 3 cylinder, 4 cone, 5 pyramid, 6 torus, 7 terrain, 8 floating island. `m` is the material index in `MATS`. `az` is the sun's angle from straight ahead in radians. Build the scene in the app first, then copy the numbers.
+Add an entry to `SCENES`. Each object is `[type, x, z, {size, stretch, lift, rot, tilt, m, seed}]`. Types are 1 sphere, 2 cube, 3 cylinder, 4 cone, 5 pyramid, 6 torus, 7 terrain, 8 floating island, 9 arch, 10 stairs, 11 twist, 12 crystals, 13 column. `m` is the material index in `MATS`. `az` is the sun's angle from straight ahead in radians. Build the scene in the app first, then copy the numbers.
 
 ## Pull request checklist
 
