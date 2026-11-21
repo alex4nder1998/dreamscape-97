@@ -43,6 +43,7 @@
   #vbtns{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:3}
   .vb{border:0;border-radius:9px;min-width:38px;height:32px;padding:0 9px;font:italic 600 13px 'Exo 2',sans-serif;color:#eee;background:rgba(30,30,30,.62);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.vb:disabled{opacity:.35}
   .vb.on{background:linear-gradient(180deg,#a8e4ff,#2a7ab0);color:#001a2a}
   #rendBtn2{display:none}
   #cover{image-rendering:auto !important;pointer-events:none}
@@ -125,7 +126,7 @@
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -704,7 +705,7 @@ async function exportAt(k){
 }
 function setRing(f){ring.style.strokeDashoffset=207.3*(1-f);}
 function preview(){
-  layoutStage(); const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
+  layoutStage(); snapSoon(); const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
   wire.style.opacity=1; drawWires();
   if(/Rendering|complete/.test(lcdEl.textContent)) lcd('Tap Render to see it properly.');
   requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/9);
@@ -725,6 +726,18 @@ function strip(){
   job=null; gl.disable(gl.SCISSOR_TEST); rendered=true; rbtn.classList.remove('busy'); setRing(0);
   saveBtn.disabled=false; saveBtn.classList.add('ready'); lcd('Render complete. Tap Save to keep it.');
 }
+// ---------- history (undo/redo) + autosave: a snapshot is the share-link encoding of the world
+const hist=[]; let hIdx=-1, hT=0, restoring=false;
+function snapSoon(){ if(restoring) return; clearTimeout(hT); hT=setTimeout(snapNow,450); }
+function snapNow(){ let s; try{ s=encodeScene(); }catch(e){ return; }
+  if(hist[hIdx]!==s){ hist.splice(hIdx+1); hist.push(s); if(hist.length>80) hist.shift(); hIdx=hist.length-1; }
+  try{ localStorage.setItem('dc97-last',s); }catch(e){} updHist(); }
+function updHist(){ const u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn'); if(u){ u.disabled=hIdx<=0; r.disabled=hIdx>=hist.length-1; } }
+function restore(s){ const p=decodeScene(s); if(!p) return; if(flying) stopFly(); restoring=true; loadState(p); sel=-1; curScene=-1; curComm=-1;
+  buildStrip(); buildCtx(); updCount(); layoutStage(); drawCoverView(true); preview(); restoring=false; try{ localStorage.setItem('dc97-last',s); }catch(e){} updHist(); }
+function undo(){ clearTimeout(hT); if(!restoring){ const cur=(()=>{try{return encodeScene();}catch(e){return null;}})(); if(cur&&cur!==hist[hIdx]){ snapNow(); } }
+  if(hIdx>0){ hIdx--; restore(hist[hIdx]); lcd('Undone.'); } else lcd('Nothing to undo.'); }
+function redo(){ if(hIdx<hist.length-1){ hIdx++; restore(hist[hIdx]); lcd('Redone.'); } else lcd('Nothing to redo.'); }
 let pt=0; function changed(){ if(flying) return; clearTimeout(pt); pt=setTimeout(preview,16); }
 let flying=false, fScale=1/5, fLast=0; const flyBtn=$('#flyBtn');
 function fly(ts){ if(!flying) return;
@@ -810,7 +823,7 @@ function buildStrip(){
     else community.forEach((p,i)=>{const b=ic('<img class="shot" alt="" src="'+esc(p.img)+'">',esc(p.n),curComm===i,()=>loadComm(i));b.classList.add('wide');strip_.appendChild(b);});
   } else if(tab==='cover'){
     COVERS.forEach((c,i)=>strip_.appendChild(ic('<div class="cvs">'+(i?'<b style="font:'+c.f.replace('{s}','19')+';background-image:'+c.icon+'">Aa</b>':'<span style="color:#888;font-size:13px">off</span>')+'</div>',c.n,W.cover.st===i,()=>{
-      W.cover.st=i; if(i&&!W.cover.band&&!W.cover.album) nameIt(); buildStrip(); buildCtx(); drawCoverView(true);
+      W.cover.st=i; if(i&&!W.cover.band&&!W.cover.album) nameIt(); buildStrip(); buildCtx(); drawCoverView(true); snapSoon();
       lcd(i?c.n+' lettering.'+(W.square?'':' Tip: press 1:1 for a square album cover.'):'Cover text off.');})));
   } else {
     SKIES.forEach((s,i)=>strip_.appendChild(ic('<div class="sky" style="background:linear-gradient(180deg,'+s.top+','+s.hor+')"><i style="left:'+(14+i*3)+'px;top:'+(20-s.elev/4)+'px;background:'+s.sun+'"></i></div>',s.n,W.sky===i,()=>{applySky(i,true);})));
@@ -852,11 +865,11 @@ function buildCtx(){
   } else if(tab==='cover'){
     const w=document.createElement('div');w.className='cin';
     const mkIn=(ph,max,k)=>{const i=document.createElement('input');i.placeholder=ph;i.maxLength=max;i.value=W.cover[k];i.id='cin_'+k;i.autocomplete='off';
-      i.oninput=()=>{W.cover[k]=i.value; if(!W.cover.st&&i.value){W.cover.st=1;buildStrip();} drawCoverView(true);}; return i;};
+      i.oninput=()=>{W.cover[k]=i.value; if(!W.cover.st&&i.value){W.cover.st=1;buildStrip();} drawCoverView(true); snapSoon();}; return i;};
     w.append(mkIn('Band name',36,'band'),mkIn('Album title',48,'album'));
     const b=document.createElement('div');b.className='btns';b.style.marginTop='6px';
-    const s1=document.createElement('button');s1.className='mbtn';s1.textContent='🎲 Name it';s1.onclick=()=>{nameIt();if(!W.cover.st)W.cover.st=1;buildStrip();buildCtx();drawCoverView(true);lcd(W.cover.band+': '+W.cover.album);};
-    const s2=document.createElement('button');s2.className='mbtn';s2.textContent='Clear text';s2.onclick=()=>{W.cover.band='';W.cover.album='';buildCtx();drawCoverView(true);lcd('Text cleared.');};
+    const s1=document.createElement('button');s1.className='mbtn';s1.textContent='🎲 Name it';s1.onclick=()=>{nameIt();if(!W.cover.st)W.cover.st=1;buildStrip();buildCtx();drawCoverView(true);snapSoon();lcd(W.cover.band+': '+W.cover.album);};
+    const s2=document.createElement('button');s2.className='mbtn';s2.textContent='Clear text';s2.onclick=()=>{W.cover.band='';W.cover.album='';buildCtx();drawCoverView(true);snapSoon();lcd('Text cleared.');};
     b.append(s1,s2); ctx.append(w,b);
   } else {
     const r=document.createElement('div');r.className='row';r.style.gap='10px';
@@ -1117,9 +1130,12 @@ document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElemen
 $('#vbtns').addEventListener('pointerdown',e=>e.stopPropagation());
 $('#sqBtn').onclick=()=>setSquare(!W.square);
 $('#fsBtn').onclick=()=>setImmersive(!document.body.classList.contains('imm'));
-$('#rendBtn2').onclick=()=>rbtn.onclick();
+$('#rendBtn2').onclick=()=>rbtn.onclick(); $('#undoBtn').onclick=undo; $('#redoBtn').onclick=redo;
 addEventListener('keydown',e=>{
-  if(e.target.closest&&e.target.closest('input,textarea,select')) return; if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.target.closest&&e.target.closest('input,textarea,select')) return;
+  if((e.metaKey||e.ctrlKey)&&!e.altKey&&$('#overlay').hidden){ const z=e.key.toLowerCase();
+    if(z==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; } if(z==='y'){ e.preventDefault(); redo(); return; } }
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
   const k=e.key, o=objs[sel];
   if(!$('#overlay').hidden){ if(k==='Escape'){ $('#closeBtn').onclick(); e.preventDefault(); } return; }
   if(k==='r'||k==='R'){ rbtn.onclick(); }
@@ -1135,7 +1151,9 @@ addEventListener('keydown',e=>{
 });
 
 // ---------- start
-defaultScene(); W.square=prefs.get('square')==='1'; try{makeThumbs();}catch(e){console.error(e);} const shared=loadFromHash(); layoutStage(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':'Welcome to Dreamscape 97. Rendering…');
+defaultScene(); W.square=prefs.get('square')==='1'; try{makeThumbs();}catch(e){console.error(e);} const shared=loadFromHash(); let back=false;
+if(!shared){ let last=null; try{ last=localStorage.getItem('dc97-last'); }catch(e){} const p=last&&decodeScene(last); if(p){ loadState(p); back=true; } }
+layoutStage(); setTab('create'); lcd(shared?'Shared world loaded. Rendering…':back?'Welcome back. Your last world is restored (Clear or a scene starts fresh).':'Welcome to Dreamscape 97. Rendering…');
 requestAnimationFrame(()=>{preview(); setTimeout(render,120);});
 })();
 </script>
