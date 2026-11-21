@@ -25,11 +25,29 @@ Works on desktop and phone, nothing to install. **[Open it live →](https://ale
 
 ## What you can do
 
-- **Create:** drop in terrain, floating islands, spheres, cubes, cylinders, cones, pyramids and rings (up to 10 objects). Pick a checker, sand, grass, rock, mirror or lava ground, or wavy or calm water.
+- **Create:** drop in terrain, floating islands, spheres, cubes, cylinders, cones, pyramids, rings, arches, stairs, twisted pillars, crystal clusters and columns (up to 10 objects). Pick a checker, sand, grass, rock, mirror or lava ground, or wavy or calm water.
 - **Edit:** tap an object to select it, drag to move it, and set its size, height, lift, turn and tilt. Materials: chrome, glass, gold, red, blue, marble, rock, checker, mountain, white, glow and ice. *Row* repeats an object into the distance.
 - **Sky & Fog:** 10 skies with giant planets, moons, stars, light rays and lens flare. Drag the sun on the dial and set clouds, haze, fog and rays. The *90s look* switch toggles hard shadows, clipped colour and a 16-bit dither.
 - **Scenes:** 14 ready-made worlds to start from, plus community worlds featured from the gallery.
-- **Render** draws the full-quality picture strip by strip, **Save** gives you a JPEG, and **Fly** orbits the camera live.
+- **Cover:** turn your world into a 90s album cover. Band name and album title in chrome, fire, ice or gold lettering, and 🎲 makes up names for you. Press **1:1** for a square frame.
+- **Render** happens by itself when you stop editing (switch *Auto* off to do it by hand).
+- **Save** as shown on screen, as a smooth 2K poster or as a 4K print.
+- **● Clip** renders an 8-second fly-through video at full quality, frame by frame.
+- **⛶** hides everything but the picture. **Undo/redo** and **autosave** mean nothing gets lost.
+- **Install it** from your browser's menu (*Add to Home Screen* / *Install app*) and it works offline.
+
+### Keyboard (desktop)
+
+| Key | Does |
+|---|---|
+| R | Render |
+| A | Auto render on/off |
+| S | Square 1:1 frame |
+| F | Full screen (Esc to leave) |
+| V | Record a clip (again to stop) |
+| Arrows | Move the selected object (Shift for bigger steps) |
+| Delete | Delete the selected object |
+| Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z | Undo, redo |
 
 ## Share your world
 
