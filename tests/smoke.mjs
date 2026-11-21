@@ -65,6 +65,10 @@ try {
   const url = page.url();
   check(/#s=[A-Za-z0-9_-]+$/.test(url), 'Share puts the world in the link');
   const enc = url.split('#s=')[1];
+  await page.waitForSelector('#shpic:not([hidden])', { timeout: 60000 }).catch(() => {});
+  const pic = await page.evaluate(() => { const i = document.querySelector('#shpic'); return !i.hidden && i.naturalWidth > 0 ? i.naturalWidth + '×' + i.naturalHeight : ''; });
+  check(!!pic, 'Share makes a picture to send with the link (' + (pic || 'none') + ')');
+  await page.click('#shClose');
   await page.click('[data-tab=create]'); await page.click('text=Clear');
   await page.evaluate(() => { location.hash = ''; });
   await page.evaluate(h => { location.hash = 's=' + h; }, enc); await rendered(page);
