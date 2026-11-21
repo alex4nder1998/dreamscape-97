@@ -257,9 +257,9 @@ float objSDF(int i, vec3 p, int oct){
     float sh=max(length(q.xz)-s.x*(0.62+0.03*cos(ang*16.0)), abs(q.y)-s.y)*0.85;
     float bs=sdBox(q-vec3(0.0,-s.y+c,0.0),vec3(s.x,c,s.x)), cp=sdBox(q-vec3(0.0,s.y-c,0.0),vec3(s.x,c,s.x)); return min(sh,min(bs,cp)); }
   if(t==7){
-    float b=sdBox(q,s); if(b>0.4) return b;
+    float b=sdBox(q+vec3(0.0,0.06*s.y,0.0),s+vec3(0.0,0.06*s.y,0.0)); if(b>0.4) return b;   // box reaches a little below the ground
     float h=terrainH(q.xz/s.xz, uC[i].y, oct);
-    float yh=-s.y+2.0*s.y*h;
+    float yh=-s.y+2.0*s.y*h-0.12*s.y*(1.0-smoothstep(0.0,0.3,h));   // flat parts sink under the ground instead of lying on it
     return max((q.y-yh)*0.42/(1.0+2.0*s.y/s.x), b);
   }
   if(t==8){
@@ -372,6 +372,12 @@ vec3 skyCol(vec3 rd){
 vec3 fogc(vec3 col, vec3 rd, float t){ return mix(col, mix(cHaze,cHor,0.5), 1.0-exp(-t*uFog)); }
 
 struct Mat { vec3 alb; float refl; float spec; vec3 tint; float glass; vec3 emi; };
+vec3 groundAlb(vec3 p, int g){   // just the ground's colour, for blending a mountain's foot into it
+  if(g==1) return vec3(0.62,0.45,0.24)*(0.8+0.3*noise(p.xz*vec2(0.5,2.2)+3.0*noise(p.xz*0.25)));
+  if(g==2) return vec3(0.09,0.2,0.04)*(0.7+0.6*noise(p.xz*0.7));
+  if(g==3) return vec3(0.26,0.24,0.22)*(0.5+noise(p.xz*0.4)*0.6+noise(p.xz*1.7)*0.3);
+  return vec3(0.07,0.04,0.035)*(0.6+0.8*noise(p.xz*2.7));
+}
 Mat getMat(int i, vec3 p, vec3 n){
   int m=int(uC[i].x+0.5); vec3 q=toLocal(i,p); vec3 s=uB[i].xyz;
   Mat M; M.alb=vec3(0.7); M.refl=0.0; M.spec=0.3; M.tint=vec3(1.0); M.glass=0.0; M.emi=vec3(0.0);
@@ -395,6 +401,12 @@ Mat getMat(int i, vec3 p, vec3 n){
   else if(m==9){ M.alb=vec3(0.78,0.77,0.74); M.refl=0.08; M.spec=0.8; }
   else if(m==10){ M.alb=vec3(0.0); M.spec=0.0; M.emi=vec3(2.4,1.25,0.45); }                        // glow
   else if(m==11){ M.glass=1.0; M.spec=1.0; M.tint=vec3(0.5,0.85,1.0)*(0.85+0.3*noise3(q*3.0)); }  // ice
+  int g=int(uGround+0.5);
+  if(int(uA[i].x+0.5)==7 && uSeaOn<0.5 && g!=0 && g!=4 && M.glass<0.5){   // mountain foot fades into the ground (sand, grass, rock, lava)
+    float hb=p.y-planeY()+(noise3(p*1.3)-0.5)*0.12*s.y;
+    float w=(1.0-smoothstep(0.0,0.1*s.y+0.3,hb))*step(-0.05,p.y-planeY())*(1.0-M.refl);   // shiny mountains keep their finish
+    M.alb=mix(M.alb,groundAlb(p,g),w);
+  }
   return M;
 }
 Mat groundMat(vec3 p, float t){
