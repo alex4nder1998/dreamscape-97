@@ -144,7 +144,7 @@
     </div>
     <div class="strip" id="strip"></div>
   </header>
-  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
+  <main id="view"><div id="stage"><canvas id="under"></canvas><canvas id="gl"></canvas><canvas id="wire"></canvas><canvas id="cover"></canvas></div><div id="vbtns"><button class="vb" id="undoBtn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>↶</button><button class="vb" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)" aria-label="Redo" disabled>↷</button><button class="vb" id="autoBtn" title="Render by itself when you stop editing (A)">Auto</button><button class="vb" id="rendBtn2" title="Render (R)">Render</button><button class="vb" id="sqBtn" title="Square 1:1 frame (S)">1:1</button><button class="vb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">⛶</button></div></main>
   <footer id="deck">
     <div id="lcd">Welcome. Tap Render to see your world.</div>
     <div class="row">
@@ -722,10 +722,11 @@ async function exportAt(k){
   }catch(e){ console.error(e); if(my===exRun) msg.textContent='This device could not render that size. Try a smaller one.'; }
 }
 function setRing(f){ring.style.strokeDashoffset=207.3*(1-f);}
+let autoR=true, arT=0;
 function preview(){
-  layoutStage(); snapSoon(); const g=++gen; job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
+  layoutStage(); snapSoon(); const g=++gen; clearTimeout(arT); if(autoR) arT=setTimeout(()=>{ if(g===gen&&!flying&&!pts.size&&$('#overlay').hidden) render(); },650); job=null; rendered=false; rbtn.classList.remove('busy'); setRing(0); saveBtn.disabled=true; saveBtn.classList.remove('ready');
   wire.style.opacity=1; drawWires();
-  if(/Rendering|complete/.test(lcdEl.textContent)) lcd('Tap Render to see it properly.');
+  if(/Rendering|complete/.test(lcdEl.textContent)) lcd(autoR?'Rendering when you stop…':'Tap Render to see it properly.');
   requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/9);
     requestAnimationFrame(()=>{ if(g!==gen) return; fullDraw(1/4.5); }); });
 }
@@ -1128,7 +1129,7 @@ const pup=e=>{const p=pts.get(e.pointerId);pts.delete(e.pointerId);if(pts.size<2
   if(down&&!down.moved&&p&&e.type==='pointerup'){const i=pick(p[0],p[1]);
     if(i>=0){select(i);if(tab!=='edit')setTab('edit');else lcd('Editing the '+TNAME[objs[i].t]+'. Drag in the view to move it.');}
     else if(sel>=0){select(-1);if(tab==='edit')lcd('Nothing selected.');}}
-  if(pts.size===0)down=null;};
+  if(pts.size===0){down=null; if(autoR&&!rendered&&!job&&!flying){ clearTimeout(arT); const g=gen; arT=setTimeout(()=>{ if(g===gen&&!pts.size&&!flying&&$('#overlay').hidden) render(); },650);} }};
 view.addEventListener('pointerup',pup);view.addEventListener('pointercancel',pup);
 view.addEventListener('wheel',e=>{e.preventDefault();cam.dist=Math.min(140,Math.max(4,cam.dist*Math.exp(e.deltaY*0.001)));changed();},{passive:false});
 let rt=0, lastWH='';
@@ -1148,7 +1149,10 @@ document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElemen
 $('#vbtns').addEventListener('pointerdown',e=>e.stopPropagation());
 $('#sqBtn').onclick=()=>setSquare(!W.square);
 $('#fsBtn').onclick=()=>setImmersive(!document.body.classList.contains('imm'));
-$('#rendBtn2').onclick=()=>rbtn.onclick(); $('#undoBtn').onclick=undo; $('#redoBtn').onclick=redo;
+$('#rendBtn2').onclick=()=>rbtn.onclick(); $('#undoBtn').onclick=undo;
+autoR=prefs.get('auto')!=='0'; $('#autoBtn').classList.toggle('on',autoR);
+function setAuto(on){ autoR=on; prefs.set('auto',on?'1':'0'); $('#autoBtn').classList.toggle('on',on); lcd(on?'Auto render on: it renders by itself when you stop editing.':'Auto render off: tap Render when you want the full picture.'); if(on&&!rendered&&!job&&!flying) render(); }
+$('#autoBtn').onclick=()=>setAuto(!autoR); $('#redoBtn').onclick=redo;
 addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,select')) return;
   if((e.metaKey||e.ctrlKey)&&!e.altKey&&$('#overlay').hidden){ const z=e.key.toLowerCase();
@@ -1159,6 +1163,7 @@ addEventListener('keydown',e=>{
   if(k==='r'||k==='R'){ rbtn.onclick(); }
   else if(k==='f'||k==='F'){ setImmersive(!document.body.classList.contains('imm')); }
   else if(k==='s'||k==='S'){ setSquare(!W.square); }
+  else if(k==='a'||k==='A'){ setAuto(!autoR); }
   else if(k==='Escape'){ if(document.body.classList.contains('imm')) setImmersive(false); else if(sel>=0){ select(-1); lcd('Nothing selected.'); } else return; }
   else if((k==='Delete'||k==='Backspace')&&o){ objs.splice(sel,1); select(-1); lcd('Deleted.'); changed(); }
   else if(k.startsWith('Arrow')&&o){ const C=camera(),f=norm([C.ww[0],0,C.ww[2]]),r=[-f[2],0,f[0]],st=e.shiftKey?2:.5;
