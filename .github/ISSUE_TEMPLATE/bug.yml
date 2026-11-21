@@ -1,0 +1,21 @@
+name: Bug report
+description: Something renders wrong, breaks or doesn't respond
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Share link of the scene (🔗 Share in the Scenes tab), if it's a rendering problem
+  - type: input
+    id: device
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Safari on iPhone 15, Chrome on Windows
+    validations:
+      required: true

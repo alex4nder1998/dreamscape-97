@@ -1,0 +1,11 @@
+name: Idea
+description: A new shape, material, sky, scene or feature
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+      description: Reference pictures help a lot, especially for 90s CGI looks.
+    validations:
+      required: true

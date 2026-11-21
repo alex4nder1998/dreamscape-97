@@ -17,6 +17,12 @@ Make late-90s CGI landscapes in your browser: chrome spheres over the sea, giant
 - **Scenes:** 14 ready-made worlds to start from.
 - **Render** draws the full-quality picture strip by strip, **Save** gives you a JPEG, and **Fly** orbits the camera live.
 
+## Share your world
+
+- **🔗 Share** (Scenes tab, or after saving a render) copies a link that contains the whole world. Anyone who opens it gets your exact scene and can remix it.
+- **⬆ Submit** opens a ready-filled [gallery issue](https://github.com/alex4nder1998/dreamscape-97/issues/new?template=gallery.yml) (needs a GitHub account). Name your world in the title and press Create.
+- Worlds that get the `featured` label appear in the app's Scenes tab for everyone, after the line, credited to the person who submitted them.
+
 ## How it works
 
 It's one self-contained `index.html`, with no build step and no dependencies apart from two Google Fonts. The whole scene is a WebGL 2 fragment shader that ray-marches signed distance fields. Terrain is analytic fBm noise, and it has reflections, refraction through glass, soft or hard shadows, a procedural cloud layer and sky planets with rings. A rough preview shows while you edit, and the full render fills in over a few frames so phones stay responsive.
@@ -24,6 +30,10 @@ It's one self-contained `index.html`, with no build step and no dependencies apa
 To run it locally, open `index.html` in a browser, or serve the folder (`python3 -m http.server`).
 
 Needs a browser with WebGL 2 (any recent Chrome, Edge, Firefox or Safari).
+
+## Contributing
+
+New scenes, shapes, materials, skies and bug fixes are all welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the code is laid out and what a good pull request looks like.
 
 ## Credits
 

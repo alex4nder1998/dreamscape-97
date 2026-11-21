@@ -1,0 +1,21 @@
+name: Submit a world to the gallery
+description: Share a Dreamscape 97 world. Featured ones appear in the app's Scenes tab.
+title: "Gallery: "
+labels: ["gallery"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Give your world a name in the title above, after "Gallery:". The link below holds the whole scene, so please leave it unchanged.
+        Featured worlds appear in the Scenes tab for everyone, credited to your GitHub name.
+  - type: textarea
+    id: link
+    attributes:
+      label: Scene link
+      description: Filled in by the Submit button in the app.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything to say about it? (optional)
